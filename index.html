@@ -1,62 +1,85 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Zee Web</title>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zee Web - Henicks GPT Field Tech</title>
+  <meta name="description" content="Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech. Share your talent, upload songs, images, and posts.">
+  <link rel="icon" href="data:," /> <!-- Placeholder for HFT icon -->
   <style>
-    body {
-      font-family: Arial;
-      margin: 0;
-      padding: 0;
-      background: #f5f5f5;
-    }
-    header {
-      background: #111;
-      color: white;
-      padding: 15px;
-      text-align: center;
-    }
-    section {
-      padding: 20px;
-    }
-    .card {
-      background: white;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-    }
+    /* BLACK & GOLD THEME */
+    body { font-family: Arial; margin: 0; padding: 0; background: #111; color: #FFD700; }
+    header { background: #000; color: #FFD700; padding: 15px; text-align: center; }
+    section { padding: 20px; }
+    .card { background: #222; padding: 15px; margin-bottom: 15px; border-radius: 8px; color: #FFD700; }
+    input, select, textarea { width: 100%; margin: 5px 0; padding: 8px; border-radius: 5px; border: none; }
+    button { background: #FFD700; color: #111; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
+    button:hover { opacity: 0.9; }
+    #feed .card { background: #1a1a1a; }
+    .hidden { display: none; }
+    #aiHelper { position: fixed; bottom: 20px; right: 20px; background: #FFD700; color: #111; padding: 10px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+    #aiChat { position: fixed; bottom: 80px; right: 20px; width: 300px; max-height: 400px; overflow-y: auto; background: #222; color: #FFD700; padding: 10px; border-radius: 10px; display: none; }
+    #aiChat input { width: 80%; display: inline-block; }
+    #aiChat button { width: 18%; display: inline-block; }
   </style>
 </head>
 <body>
 
 <header>
   <h1>Zee Web</h1>
-  <p>Built by Henry Tallen</p>
+  <p>Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech</p>
 </header>
 
-<section>
-  <div class="card">
-    <h2>Welcome</h2>
-    <p>This is your real website, hosted free on GitHub Pages.</p>
+<section id="authSection">
+  <div class="card" id="signupCard">
+    <h2>Sign Up</h2>
+    <input type="email" id="signupEmail" placeholder="Email">
+    <input type="password" id="signupPassword" placeholder="Password">
+    <button onclick="signUp()">Sign Up</button>
   </div>
 
-  <div class="card">
-    <h2>Next Step</h2>
-    <p>You will later add user uploads and business profiles.</p>
-  </div>
-
-  <div class="card">
-    <h2>Upload File</h2>
-    <input type="file" id="fileButton" />
-    <p id="uploadStatus"></p>
+  <div class="card" id="loginCard">
+    <h2>Log In</h2>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="logIn()">Log In</button>
   </div>
 </section>
+
+<section id="mainSection" class="hidden">
+  <div class="card">
+    <h2>Upload Work</h2>
+    <input type="file" id="fileInput">
+    <input type="text" id="postText" placeholder="Write something about your work">
+    <input type="text" id="postStyle" placeholder="Your talent/style">
+    <button onclick="uploadFile()">Upload</button>
+    <p id="uploadStatus"></p>
+  </div>
+
+  <div class="card">
+    <h2>Search</h2>
+    <input type="text" id="searchInput" placeholder="Search by user or style" oninput="filterFeed()">
+  </div>
+
+  <div id="feed"></div>
+</section>
+
+<div id="aiHelper" onclick="toggleAI()">AI</div>
+<div id="aiChat">
+  <div id="aiMessages"></div>
+  <input type="text" id="aiInput" placeholder="Ask Henicks GPT AI">
+  <button onclick="sendAI()">Send</button>
+</div>
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
 <script>
+  // Firebase configuration
   const firebaseConfig = {
     apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
     authDomain: "zeeworldyhi.firebaseapp.com",
@@ -69,6 +92,130 @@
 
   firebase.initializeApp(firebaseConfig);
   firebase.analytics();
+  const auth = firebase.auth();
+  const storage = firebase.storage();
+  const db = firebase.firestore();
+
+  let currentUser = null;
+
+  // Sign Up
+  function signUp() {
+    const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPassword').value;
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(userCred => {
+        currentUser = userCred.user;
+        showMainSection();
+      })
+      .catch(err => alert(err.message));
+  }
+
+  // Log In
+  function logIn() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    auth.signInWithEmailAndPassword(email, password)
+      .then(userCred => {
+        currentUser = userCred.user;
+        showMainSection();
+      })
+      .catch(err => alert(err.message));
+  }
+
+  // Show main section
+  function showMainSection() {
+    document.getElementById('authSection').classList.add('hidden');
+    document.getElementById('mainSection').classList.remove('hidden');
+    listPosts();
+  }
+
+  // Upload file + post
+  function uploadFile() {
+    const file = document.getElementById('fileInput').files[0];
+    const text = document.getElementById('postText').value;
+    const style = document.getElementById('postStyle').value;
+    if (!file) return alert("Select a file to upload");
+    const filename = Date.now() + "_" + file.name;
+    const storageRef = storage.ref('uploads/' + filename);
+    const uploadTask = storageRef.put(file);
+
+    document.getElementById('uploadStatus').innerText = "Uploading...";
+
+    uploadTask.on('state_changed', 
+      snapshot => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        document.getElementById('uploadStatus').innerText = "Upload is " + progress.toFixed(0) + "% done";
+      },
+      error => document.getElementById('uploadStatus').innerText = "Error: " + error,
+      () => {
+        uploadTask.snapshot.ref.getDownloadURL().then(url => {
+          db.collection('posts').add({
+            user: currentUser.email,
+            fileURL: url,
+            fileName: file.name,
+            text: text,
+            style: style,
+            timestamp: Date.now()
+          }).then(() => {
+            document.getElementById('uploadStatus').innerText = "Upload complete!";
+            document.getElementById('fileInput').value = "";
+            document.getElementById('postText').value = "";
+            document.getElementById('postStyle').value = "";
+            listPosts();
+          });
+        });
+      }
+    );
+  }
+
+  // List posts
+  function listPosts() {
+    const feed = document.getElementById('feed');
+    feed.innerHTML = "";
+    db.collection('posts').orderBy('timestamp','desc').get().then(snapshot => {
+      snapshot.forEach(doc => {
+        const post = doc.data();
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.innerHTML = `
+          <p><strong>${post.user}</strong> (${post.style})</p>
+          <p>${post.text}</p>
+          <a href="${post.fileURL}" download="${post.fileName}">Download File</a>
+        `;
+        feed.appendChild(card);
+      });
+    });
+  }
+
+  // Search posts
+  function filterFeed() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const cards = document.querySelectorAll('#feed .card');
+    cards.forEach(card => {
+      card.style.display = card.innerText.toLowerCase().includes(query) ? '' : 'none';
+    });
+  }
+
+  // Henicks GPT AI placeholder
+  function toggleAI() {
+    const chat = document.getElementById('aiChat');
+    chat.style.display = chat.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function sendAI() {
+    const input = document.getElementById('aiInput').value;
+    if (!input) return;
+    const messages = document.getElementById('aiMessages');
+    const msg = document.createElement('p');
+    msg.innerText = "You: " + input;
+    messages.appendChild(msg);
+    const aiReply = document.createElement('p');
+    aiReply.innerText = "Henicks GPT AI: [This is a placeholder reply]";
+    messages.appendChild(aiReply);
+    document.getElementById('aiInput').value = "";
+    messages.scrollTop = messages.scrollHeight;
+  }
+
 </script>
 
 </body>
