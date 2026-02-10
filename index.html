@@ -16,7 +16,6 @@
     button { background: #FFD700; color: #111; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
     button:hover { opacity: 0.9; }
     #feed .card { background: #1a1a1a; }
-    .hidden { display: none; }
     #aiHelper { position: fixed; bottom: 20px; right: 20px; background: #FFD700; color: #111; padding: 10px; border-radius: 50%; cursor: pointer; font-weight: bold; }
     #aiChat { position: fixed; bottom: 80px; right: 20px; width: 300px; max-height: 400px; overflow-y: auto; background: #222; color: #FFD700; padding: 10px; border-radius: 10px; display: none; }
     #aiChat input { width: 80%; display: inline-block; }
@@ -30,23 +29,18 @@
   <p>Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech</p>
 </header>
 
-<section id="authSection">
-  <div class="card" id="signupCard">
-    <h2>Sign Up</h2>
-    <input type="email" id="signupEmail" placeholder="Email">
-    <input type="password" id="signupPassword" placeholder="Password">
-    <button onclick="signUp()">Sign Up</button>
-  </div>
-
-  <div class="card" id="loginCard">
-    <h2>Log In</h2>
-    <input type="email" id="loginEmail" placeholder="Email">
-    <input type="password" id="loginPassword" placeholder="Password">
-    <button onclick="logIn()">Log In</button>
+<section>
+  <div class="card">
+    <h2>About Zee Web</h2>
+    <p>
+      Welcome to Zee Web, the ultimate platform to share your talent, upload your songs, images, or creative posts, 
+      and showcase your style. Every work is saved permanently, user-friendly, and fully mobile accessible. 
+      Henicks GPT AI is here to guide and inspire you, making your experience legendary.
+    </p>
   </div>
 </section>
 
-<section id="mainSection" class="hidden">
+<section id="mainSection">
   <div class="card">
     <h2>Upload Work</h2>
     <input type="file" id="fileInput">
@@ -58,7 +52,7 @@
 
   <div class="card">
     <h2>Search</h2>
-    <input type="text" id="searchInput" placeholder="Search by user or style" oninput="filterFeed()">
+    <input type="text" id="searchInput" placeholder="Search by post or style" oninput="filterFeed()">
   </div>
 
   <div id="feed"></div>
@@ -74,7 +68,6 @@
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
@@ -92,42 +85,8 @@
 
   firebase.initializeApp(firebaseConfig);
   firebase.analytics();
-  const auth = firebase.auth();
   const storage = firebase.storage();
   const db = firebase.firestore();
-
-  let currentUser = null;
-
-  // Sign Up
-  function signUp() {
-    const email = document.getElementById('signupEmail').value;
-    const password = document.getElementById('signupPassword').value;
-    auth.createUserWithEmailAndPassword(email, password)
-      .then(userCred => {
-        currentUser = userCred.user;
-        showMainSection();
-      })
-      .catch(err => alert(err.message));
-  }
-
-  // Log In
-  function logIn() {
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    auth.signInWithEmailAndPassword(email, password)
-      .then(userCred => {
-        currentUser = userCred.user;
-        showMainSection();
-      })
-      .catch(err => alert(err.message));
-  }
-
-  // Show main section
-  function showMainSection() {
-    document.getElementById('authSection').classList.add('hidden');
-    document.getElementById('mainSection').classList.remove('hidden');
-    listPosts();
-  }
 
   // Upload file + post
   function uploadFile() {
@@ -150,7 +109,6 @@
       () => {
         uploadTask.snapshot.ref.getDownloadURL().then(url => {
           db.collection('posts').add({
-            user: currentUser.email,
             fileURL: url,
             fileName: file.name,
             text: text,
@@ -178,7 +136,7 @@
         const card = document.createElement('div');
         card.classList.add('card');
         card.innerHTML = `
-          <p><strong>${post.user}</strong> (${post.style})</p>
+          <p><strong>Anonymous</strong> (${post.style || 'No style'})</p>
           <p>${post.text}</p>
           <a href="${post.fileURL}" download="${post.fileName}">Download File</a>
         `;
@@ -216,7 +174,10 @@
     messages.scrollTop = messages.scrollHeight;
   }
 
+  // Load posts on page load
+  listPosts();
+
 </script>
 
 </body>
-  </html>
+</html>
