@@ -3,69 +3,151 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Zee Web Chat - Henicks GPT Field Tech</title>
-  <meta name="description" content="Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech. Share your talent and posts.">
+  <title>Zee Chat - The best chat app</title>
+  <meta name="description" content="Zee Chat - A fun chat app to message your friends">
   <style>
-    body { font-family: Arial; margin:0; padding:0; background:#111; color:#FFD700; }
-    header { background:#000; padding:15px; text-align:center; }
-    section { padding:20px; }
-    .card { padding:15px; margin-bottom:15px; border-radius:8px; }
-    .sent { background:#FFD700; color:#111; text-align:right; max-width:70%; margin-left:auto; margin-right:10px; padding:10px; border-radius:15px; }
-    .received { background:#333; color:#FFD700; text-align:left; max-width:70%; margin-left:10px; margin-right:auto; padding:10px; border-radius:15px; }
-    input, textarea { width:100%; margin:5px 0; padding:8px; border-radius:5px; border:none; }
-    button { background:#FFD700; color:#111; border:none; padding:10px; border-radius:5px; cursor:pointer; }
-    button:hover { opacity:0.9; }
-    #posts { overflow-y: scroll; height: 400px; margin-bottom:20px; }
-    #chatInput { display:flex; gap:10px; margin-top:15px; }
-    #chatInput input { flex:1; padding:10px; background:#1a1a1a; border-radius:5px; color:#FFD700; }
-    #chatInput button { background:#FFD700; padding:10px 20px; border-radius:5px; cursor:pointer; }
-    #authForms { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-    #chatInterface { display: none; }
+    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#111; color:#fff; }
+    header {
+      background-color: #000;
+      padding: 20px;
+      text-align: center;
+    }
+    header h1 {
+      color: #fff;
+      font-size: 30px;
+    }
+    .logo {
+      width: 50px;
+      height: 50px;
+    }
+    #authForms {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      gap: 10px;
+    }
+    #authForms input {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      width: 300px;
+      border: 1px solid #888;
+      background-color: #222;
+      color: #fff;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.8; }
+    #chatInterface {
+      display: none;
+      padding: 20px;
+    }
+    .chat-box {
+      background: #1e1e1e;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+    .chat-box.user1 {
+      background-color: #4CAF50;
+      color: white;
+      text-align: left;
+      margin-left: 10px;
+      margin-right: auto;
+    }
+    .chat-box.user2 {
+      background-color: #2196F3;
+      color: white;
+      text-align: right;
+      margin-right: 10px;
+      margin-left: auto;
+    }
+    #chatInput {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    #chatInput input {
+      flex-grow: 1;
+      padding: 10px;
+      background-color: #333;
+      color: white;
+      border: 1px solid #888;
+      border-radius: 5px;
+    }
+    #chatInput button {
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .status {
+      font-size: 14px;
+      color: #888;
+      text-align: center;
+    }
+    .send-image-btn {
+      cursor: pointer;
+      background-color: transparent;
+      border: none;
+      color: #4CAF50;
+      font-size: 20px;
+    }
+    .send-image-btn:hover { opacity: 0.8; }
+    .active-status {
+      color: #4CAF50;
+      font-size: 14px;
+      text-align: right;
+      margin-right: 15px;
+    }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>Zee Web Chat</h1>
-  <p>Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech</p>
+  <img src="chat-logo.png" alt="Zee Chat Logo" class="logo">
+  <h1>Zee Chat</h1>
 </header>
 
 <!-- Authentication Forms (Visible until login/signup) -->
 <section id="authForms">
-  <div>
-    <h2>Sign Up</h2>
-    <input type="email" id="signUpEmail" placeholder="Enter your email">
-    <input type="password" id="signUpPassword" placeholder="Enter your password">
-    <button onclick="signUp()">Sign Up</button>
-  </div>
+  <h2>Sign Up / Log In</h2>
+  <input type="email" id="signUpEmail" placeholder="Enter your email" required>
+  <input type="password" id="signUpPassword" placeholder="Enter your password" required>
+  <button onclick="signUp()">Sign Up</button>
 
-  <div>
-    <h2>Log In</h2>
-    <input type="email" id="loginEmail" placeholder="Enter your email">
-    <input type="password" id="loginPassword" placeholder="Enter your password">
-    <button onclick="logIn()">Log In</button>
-  </div>
+  <h2>Log In</h2>
+  <input type="email" id="loginEmail" placeholder="Enter your email" required>
+  <input type="password" id="loginPassword" placeholder="Enter your password" required>
+  <button onclick="logIn()">Log In</button>
 </section>
 
-<!-- Chat Interface (Hidden until login) -->
+<!-- Chat Interface (Visible after login) -->
 <section id="chatInterface">
-  <div class="card">
-    <h2>Send Message</h2>
-    <div id="chatInput">
-      <input type="text" id="nameInput" placeholder="Your Name">
-      <input type="text" id="textInput" placeholder="Type a message">
-      <button onclick="sendMessage()">Send</button>
-    </div>
-    <p id="status"></p>
+  <div class="status">Active User: Zee</div>
+  <div id="chatDisplay"></div>
+
+  <div id="chatInput">
+    <input type="text" id="textInput" placeholder="Type your message...">
+    <button onclick="sendMessage()">Send</button>
+    <button class="send-image-btn" onclick="sendImage()">📷</button>
   </div>
 
-  <section>
-    <h2>Chat</h2>
-    <div id="posts"></div>
-  </section>
+  <div class="active-status">You are online</div>
 </section>
 
-<!-- Firebase v8 SDK -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -84,8 +166,8 @@
 
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
-  var database = firebase.database();
   var auth = firebase.auth();
+  var database = firebase.database();
 
   // Sign Up function
   function signUp() {
@@ -117,45 +199,39 @@
       });
   }
 
-  // Send message function
+  // Send Message function
   function sendMessage() {
-    var name = document.getElementById('nameInput').value || "Anonymous";
+    var user = firebase.auth().currentUser;
     var text = document.getElementById('textInput').value;
-    if (!text) return alert("Write something before sending!");
-
-    var messageData = { name: name, text: text, timestamp: Date.now() };
-    var newMessageRef = database.ref('messages').push();
+    var messageData = { user: user.email, text: text, timestamp: Date.now() };
+    var newMessageRef = database.ref('chats/messages').push();
     newMessageRef.set(messageData, function(error) {
       if (error) {
-        document.getElementById('status').innerText = "Error: " + error;
+        alert("Error sending message: " + error.message);
       } else {
-        document.getElementById('status').innerText = "Message sent!";
         document.getElementById('textInput').value = "";
       }
     });
   }
 
-  // Real-time listener for messages
-  var messagesRef = database.ref('messages');
-  messagesRef.on('value', function(snapshot) {
-    document.getElementById('posts').innerHTML = "";
+  // Display messages in the chat
+  database.ref('chats/messages').on('value', function(snapshot) {
     var messages = snapshot.val();
-    if (!messages) return;
-
-    var sortedKeys = Object.keys(messages).sort(function(a,b) {
-      return messages[a].timestamp - messages[b].timestamp;
-    });
-
-    sortedKeys.forEach(function(key) {
+    var chatDisplay = document.getElementById('chatDisplay');
+    chatDisplay.innerHTML = ""; // Clear previous messages
+    for (var key in messages) {
       var msg = messages[key];
-      var messageClass = msg.name === document.getElementById('nameInput').value ? "sent" : "received";
-      var card = document.createElement('div');
-      card.classList.add(messageClass);
-      card.innerHTML = "<p><strong>" + msg.name + "</strong></p><p>" + msg.text + "</p>";
-      document.getElementById('posts').appendChild(card);
-      document.getElementById('posts').scrollTop = document.getElementById('posts').scrollHeight;
-    });
+      var messageElement = document.createElement('div');
+      messageElement.classList.add(msg.user === firebase.auth().currentUser.email ? 'chat-box user1' : 'chat-box user2');
+      messageElement.innerHTML = "<strong>" + msg.user + ":</strong> " + msg.text;
+      chatDisplay.appendChild(messageElement);
+    }
   });
+
+  // Send image (example placeholder)
+  function sendImage() {
+    alert("Image sending functionality is coming soon!");
+  }
 
 </script>
 
