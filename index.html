@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Zee Web - Henicks GPT Field Tech</title>
-  <meta name="description" content="Website created by Henry Tallen, Zee. Share your talent and information.">
-  <link rel="icon" href="data:," />
+  <meta name="description" content="Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech. Share your talent, upload posts, text, and image URLs.">
   <style>
     body { font-family: Arial; margin: 0; padding: 0; background: #111; color: #FFD700; }
     header { background: #000; color: #FFD700; padding: 15px; text-align: center; }
@@ -14,36 +13,35 @@
     input, textarea { width: 100%; margin: 5px 0; padding: 8px; border-radius: 5px; border: none; }
     button { background: #FFD700; color: #111; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
     button:hover { opacity: 0.9; }
-    #posts .card { background: #1a1a1a; }
+    img { max-width: 100%; margin-top: 10px; border-radius: 5px; }
   </style>
 </head>
 <body>
 
 <header>
   <h1>Zee Web</h1>
-  <p>Website created by Henry Tallen, Zee</p>
+  <p>Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech</p>
 </header>
 
 <section>
   <div class="card">
-    <h2>Upload Text</h2>
+    <h2>Share Your Post</h2>
     <input type="text" id="nameInput" placeholder="Your Name">
-    <input type="text" id="titleInput" placeholder="Title/Style">
-    <textarea id="textInput" placeholder="Write something about yourself..."></textarea>
-    <button onclick="uploadText()">Upload</button>
-    <p id="status"></p>
+    <input type="text" id="styleInput" placeholder="Your Style/Profession">
+    <textarea id="textInput" placeholder="Write something..."></textarea>
+    <input type="text" id="imageInput" placeholder="Image URL (optional)">
+    <button onclick="uploadPost()">Upload Post</button>
   </div>
 </section>
 
 <section>
   <h2>Posts</h2>
-  <div id="posts"></div>
+  <div id="feed"></div>
 </section>
 
-<!-- Firebase SDKs -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
-
 <script>
   // Firebase config
   const firebaseConfig = {
@@ -58,42 +56,54 @@
 
   // Initialize Firebase
   const app = firebase.initializeApp(firebaseConfig);
-  const database = firebase.database();
+  const db = firebase.database();
 
-  // Upload text to Realtime Database
-  function uploadText() {
-    const name = document.getElementById('nameInput').value.trim();
-    const title = document.getElementById('titleInput').value.trim();
-    const text = document.getElementById('textInput').value.trim();
+  function uploadPost() {
+    const name = document.getElementById('nameInput').value || "Anonymous";
+    const style = document.getElementById('styleInput').value || "No style";
+    const text = document.getElementById('textInput').value;
+    const image = document.getElementById('imageInput').value;
+
     if (!text) return alert("Please write something!");
 
-    const postRef = database.ref('posts').push();
+    const postRef = db.ref('posts').push();
     postRef.set({
-      name: name || "Anonymous",
-      title: title || "No style",
+      name: name,
+      style: style,
       text: text,
+      image: image,
       timestamp: Date.now()
     });
 
-    document.getElementById('status').innerText = "Post uploaded!";
     document.getElementById('nameInput').value = "";
-    document.getElementById('titleInput').value = "";
+    document.getElementById('styleInput').value = "";
     document.getElementById('textInput').value = "";
+    document.getElementById('imageInput').value = "";
   }
 
-  // Display posts from Realtime Database
-  const postsDiv = document.getElementById('posts');
-  database.ref('posts').orderByChild('timestamp').on('child_added', snapshot => {
-    const post = snapshot.val();
-    const card = document.createElement('div');
-    card.classList.add('card');
-    card.innerHTML = `
-      <p><strong>${post.name}</strong> (${post.title})</p>
-      <p>${post.text}</p>
-    `;
-    postsDiv.prepend(card);
-  });
+  function loadPosts() {
+    const feed = document.getElementById('feed');
+    db.ref('posts').orderByChild('timestamp').on('value', snapshot => {
+      feed.innerHTML = "";
+      const posts = snapshot.val();
+      if (posts) {
+        Object.keys(posts).reverse().forEach(key => {
+          const post = posts[key];
+          const card = document.createElement('div');
+          card.classList.add('card');
+          card.innerHTML = `
+            <p><strong>${post.name}</strong> (${post.style})</p>
+            <p>${post.text}</p>
+            ${post.image ? `<img src="${post.image}" alt="Post image">` : ""}
+          `;
+          feed.appendChild(card);
+        });
+      }
+    });
+  }
+
+  loadPosts();
 </script>
 
 </body>
-</html>
+  </html>
