@@ -4,16 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Zee Web - Henicks GPT Field Tech</title>
-  <meta name="description" content="Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech. Share your talent, upload text posts, and showcase your style.">
   <style>
-    body { font-family: Arial; margin:0; padding:0; background:#111; color:#FFD700; }
-    header { background:#000; padding:15px; text-align:center; }
-    section { padding:20px; }
-    .card { background:#222; padding:15px; margin-bottom:15px; border-radius:8px; }
-    input, textarea { width:100%; margin:5px 0; padding:8px; border-radius:5px; border:none; }
-    button { background:#FFD700; color:#111; border:none; padding:10px; border-radius:5px; cursor:pointer; }
-    button:hover { opacity:0.9; }
-    #posts .card { background:#1a1a1a; }
+    body { font-family: Arial; margin: 0; padding: 0; background: #111; color: #FFD700; }
+    header { background: #000; color: #FFD700; padding: 15px; text-align: center; }
+    section { padding: 20px; }
+    input, textarea, button { display: block; width: 100%; margin: 5px 0; padding: 8px; border-radius: 5px; border: none; }
+    button { background: #FFD700; color: #111; cursor: pointer; }
+    button:hover { opacity: 0.9; }
+    .card { background: #222; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -24,80 +22,89 @@
 </header>
 
 <section>
-  <div class="card">
-    <h2>Share Your Work</h2>
-    <input type="text" id="nameInput" placeholder="Your name">
-    <input type="text" id="styleInput" placeholder="Your talent/style">
-    <textarea id="descInput" placeholder="Share your message"></textarea>
-    <button onclick="submitPost()">Upload</button>
-    <p id="status"></p>
-  </div>
+  <h2>Share Your Post</h2>
+  <input type="text" id="postName" placeholder="Your Name">
+  <input type="text" id="postTitle" placeholder="Title or Style">
+  <textarea id="postText" placeholder="Write something..."></textarea>
+  <input type="text" id="postImage" placeholder="Image URL (optional)">
+  <button onclick="sendPost()">Upload Post</button>
 </section>
 
 <section>
   <h2>Posts</h2>
-  <div id="posts"></div>
+  <div id="postsContainer"></div>
 </section>
 
-<!-- Firebase SDK -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
 
 <script>
-  // Initialize Firebase
+  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
     authDomain: "zeeworldyhi.firebaseapp.com",
-    databaseURL: "https://zeeworldyhi-default-rtdb.firebaseio.com/", // ✅ Your actual DB URL
+    databaseURL: "https://zeeworldyhi-default-rtdb.firebaseio.com/",
     projectId: "zeeworldyhi",
     storageBucket: "zeeworldyhi.firebasestorage.app",
     messagingSenderId: "154414924399",
     appId: "1:154414924399:web:4817b6b3e7cb5f91ba439a"
   };
 
+  // Initialize Firebase
   const app = firebase.initializeApp(firebaseConfig);
-  const database = firebase.database();
+  const db = firebase.database();
 
-  // Submit post
-  function submitPost() {
-    const name = document.getElementById('nameInput').value.trim() || "Anonymous";
-    const style = document.getElementById('styleInput').value.trim() || "No style";
-    const desc = document.getElementById('descInput').value.trim();
-    if (!desc) return alert("Please write something!");
+  function sendPost() {
+    const name = document.getElementById('postName').value || 'Anonymous';
+    const title = document.getElementById('postTitle').value || 'No style';
+    const text = document.getElementById('postText').value || '';
+    const image = document.getElementById('postImage').value || '';
 
-    const postRef = database.ref('posts').push();
-    postRef.set({
+    if (!text && !image) {
+      alert("Please enter text or an image URL.");
+      return;
+    }
+
+    const newPostRef = db.ref('posts').push();
+    newPostRef.set({
       name: name,
-      style: style,
-      message: desc,
+      title: title,
+      text: text,
+      image: image,
       timestamp: Date.now()
-    }, (error) => {
-      if(error){
-        document.getElementById('status').innerText = "Error: " + error;
+    }, error => {
+      if (error) {
+        alert("Error uploading post: " + error);
       } else {
-        document.getElementById('status').innerText = "Uploaded!";
-        document.getElementById('nameInput').value = "";
-        document.getElementById('styleInput').value = "";
-        document.getElementById('descInput').value = "";
+        document.getElementById('postName').value = '';
+        document.getElementById('postTitle').value = '';
+        document.getElementById('postText').value = '';
+        document.getElementById('postImage').value = '';
       }
     });
   }
 
-  // Load posts and listen for new ones
-  const postsDiv = document.getElementById('posts');
-  const postsRef = database.ref('posts').orderByChild('timestamp');
-
-  postsRef.on('value', snapshot => {
-    postsDiv.innerHTML = "";
-    snapshot.forEach(child => {
-      const post = child.val();
-      const card = document.createElement('div');
-      card.classList.add('card');
-      card.innerHTML = `<p><strong>${post.name}</strong> (${post.style})</p>
-                        <p>${post.message}</p>`;
-      postsDiv.prepend(card);
+  function loadPosts() {
+    const container = document.getElementById('postsContainer');
+    db.ref('posts').orderByChild('timestamp').on('value', snapshot => {
+      container.innerHTML = '';
+      const posts = snapshot.val();
+      if (!posts) return;
+      Object.values(posts).reverse().forEach(post => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <p><strong>${post.name}</strong> (${post.title})</p>
+          <p>${post.text}</p>
+          ${post.image ? `<img src="${post.image}" alt="Post Image" style="max-width:100%;">` : ''}
+        `;
+        container.appendChild(card);
+      });
     });
-  });
+  }
+
+  loadPosts();
 </script>
 
 </body>
