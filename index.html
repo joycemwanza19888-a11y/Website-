@@ -12,6 +12,7 @@
     button { background: #FFD700; color: #111; cursor: pointer; }
     button:hover { opacity: 0.9; }
     .card { background: #222; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
+    img { max-width: 100%; border-radius: 5px; margin-top: 5px; }
   </style>
 </head>
 <body>
@@ -35,7 +36,7 @@
   <div id="postsContainer"></div>
 </section>
 
-<!-- Firebase -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
 
@@ -55,6 +56,7 @@
   const app = firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
+  // Send post
   function sendPost() {
     const name = document.getElementById('postName').value || 'Anonymous';
     const title = document.getElementById('postTitle').value || 'No style';
@@ -66,46 +68,40 @@
       return;
     }
 
-    const newPostRef = db.ref('posts').push();
-    newPostRef.set({
+    db.ref('posts').push({
       name: name,
       title: title,
       text: text,
       image: image,
       timestamp: Date.now()
-    }, error => {
-      if (error) {
-        alert("Error uploading post: " + error);
-      } else {
-        document.getElementById('postName').value = '';
-        document.getElementById('postTitle').value = '';
-        document.getElementById('postText').value = '';
-        document.getElementById('postImage').value = '';
-      }
     });
+
+    // Clear inputs
+    document.getElementById('postName').value = '';
+    document.getElementById('postTitle').value = '';
+    document.getElementById('postText').value = '';
+    document.getElementById('postImage').value = '';
   }
 
-  function loadPosts() {
-    const container = document.getElementById('postsContainer');
-    db.ref('posts').orderByChild('timestamp').on('value', snapshot => {
-      container.innerHTML = '';
-      const posts = snapshot.val();
-      if (!posts) return;
-      Object.values(posts).reverse().forEach(post => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <p><strong>${post.name}</strong> (${post.title})</p>
-          <p>${post.text}</p>
-          ${post.image ? `<img src="${post.image}" alt="Post Image" style="max-width:100%;">` : ''}
-        `;
-        container.appendChild(card);
-      });
+  // Load posts and update screen in real-time
+  const postsContainer = document.getElementById('postsContainer');
+  db.ref('posts').orderByChild('timestamp').on('value', snapshot => {
+    postsContainer.innerHTML = '';
+    const posts = snapshot.val();
+    if (!posts) return;
+    // Display latest posts first
+    Object.values(posts).sort((a,b) => b.timestamp - a.timestamp).forEach(post => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <p><strong>${post.name}</strong> (${post.title})</p>
+        <p>${post.text}</p>
+        ${post.image ? `<img src="${post.image}" alt="Post Image">` : ''}
+      `;
+      postsContainer.appendChild(card);
     });
-  }
-
-  loadPosts();
+  });
 </script>
 
 </body>
-  </html>
+</html>
