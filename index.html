@@ -1,169 +1,111 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zee Web</title>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #111;
-      color: #f5f5f5;
-    }
-
-    header {
-      background: #000;
-      padding: 20px;
-      text-align: center;
-      border-bottom: 2px solid gold;
-    }
-
-    header h1 {
-      margin: 0;
-      color: gold;
-    }
-
-    section {
-      padding: 20px;
-      max-width: 800px;
-      margin: auto;
-    }
-
-    .card {
-      background: #1c1c1c;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-    }
-
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 6px;
-      border: none;
-      font-size: 14px;
-    }
-
-    button {
-      margin-top: 10px;
-      padding: 10px;
-      width: 100%;
-      background: gold;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button:hover {
-      opacity: 0.9;
-    }
-
-    .post {
-      background: #000;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-    }
-
-    .post strong {
-      color: gold;
-    }
-
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zee Web - Henicks GPT Field Tech</title>
+<meta name="description" content="Website created by Henry Tallen, Zee. Share your talent, upload text posts.">
+<style>
+  body { font-family: Arial; margin: 0; padding: 0; background: #111; color: #FFD700; }
+  header { background: #000; color: #FFD700; padding: 15px; text-align: center; }
+  section { padding: 20px; }
+  .card { background: #222; padding: 15px; margin-bottom: 15px; border-radius: 8px; color: #FFD700; }
+  input, textarea { width: 100%; margin: 5px 0; padding: 8px; border-radius: 5px; border: none; }
+  button { background: #FFD700; color: #111; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
+  button:hover { opacity: 0.9; }
+</style>
 </head>
-
 <body>
 
 <header>
   <h1>Zee Web</h1>
-  <p>Share your thoughts, talent and creativity.</p>
+  <p>Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech</p>
 </header>
 
 <section>
-
   <div class="card">
-    <h2>About You</h2>
-    <input type="text" id="userName" placeholder="Your Name">
-    <textarea id="userInfo" placeholder="Tell people who you are..."></textarea>
+    <h2>Share Your Work</h2>
+    <input type="text" id="nameInput" placeholder="Your name">
+    <input type="text" id="styleInput" placeholder="Your talent/style">
+    <textarea id="textInput" placeholder="Write something about your work"></textarea>
+    <button onclick="postText()">Post</button>
   </div>
 
-  <div class="card">
-    <h2>Share Something</h2>
-    <textarea id="postText" placeholder="Write something..."></textarea>
-    <button onclick="uploadPost()">Post</button>
-  </div>
-
-  <div class="card">
-    <h2>Community Posts</h2>
-    <div id="postsContainer"></div>
-  </div>
-
+  <h2>Posts</h2>
+  <div id="postsContainer"></div>
 </section>
 
-<!-- Firebase v8 (stable version) -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
 
 <script>
-  var firebaseConfig = {
+  // --- Firebase config ---
+  const firebaseConfig = {
     apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
     authDomain: "zeeworldyhi.firebaseapp.com",
     databaseURL: "https://zeeworldyhi-default-rtdb.firebaseio.com",
     projectId: "zeeworldyhi",
-    storageBucket: "zeeworldyhi.appspot.com",
+    storageBucket: "zeeworldyhi.firebasestorage.app",
     messagingSenderId: "154414924399",
     appId: "1:154414924399:web:4817b6b3e7cb5f91ba439a"
   };
 
-  firebase.initializeApp(firebaseConfig);
-  var database = firebase.database();
+  // Initialize Firebase
+  const app = firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
 
-  var postsContainer = document.getElementById("postsContainer");
+  // Function to post text
+  function postText() {
+    const name = document.getElementById('nameInput').value.trim() || "Anonymous";
+    const style = document.getElementById('styleInput').value.trim() || "No style";
+    const text = document.getElementById('textInput').value.trim();
+    if (!text) { alert("Please write something"); return; }
 
-  function uploadPost() {
-    var name = document.getElementById("userName").value.trim();
-    var info = document.getElementById("userInfo").value.trim();
-    var text = document.getElementById("postText").value.trim();
-
-    if (text === "") {
-      alert("Please write something before posting.");
-      return;
-    }
-
-    var postData = {
-      name: name || "Anonymous",
-      info: info || "",
+    const postData = {
+      name: name,
+      style: style,
       text: text,
-      time: Date.now()
+      timestamp: Date.now()
     };
 
-    database.ref("posts").push(postData);
-
-    document.getElementById("postText").value = "";
+    // Push to Firebase
+    database.ref('posts').push(postData, (error) => {
+      if (error) {
+        alert("Error posting: " + error);
+      } else {
+        // Clear inputs
+        document.getElementById('nameInput').value = "";
+        document.getElementById('styleInput').value = "";
+        document.getElementById('textInput').value = "";
+      }
+    });
   }
 
-  function displayPost(post) {
-    var div = document.createElement("div");
-    div.className = "post";
-
-    div.innerHTML =
-      "<strong>" + post.name + "</strong><br>" +
-      (post.info ? "<small>" + post.info + "</small><br><br>" : "") +
-      post.text;
-
-    postsContainer.prepend(div);
+  // Function to display posts
+  function displayPosts() {
+    const container = document.getElementById('postsContainer');
+    container.innerHTML = "";
+    database.ref('posts').orderByChild('timestamp').once('value', snapshot => {
+      const posts = snapshot.val();
+      if (!posts) return;
+      // Sort descending
+      const sortedPosts = Object.values(posts).sort((a, b) => b.timestamp - a.timestamp);
+      sortedPosts.forEach(post => {
+        const div = document.createElement('div');
+        div.classList.add('card');
+        div.innerHTML = `<p><strong>${post.name}</strong> (${post.style})</p>
+                         <p>${post.text}</p>`;
+        container.appendChild(div);
+      });
+    });
   }
 
-  database.ref("posts").off();
+  // Load posts every 2 seconds (or on page load)
+  setInterval(displayPosts, 2000);
+  displayPosts();
 
-  database.ref("posts").on("child_added", function(snapshot) {
-    displayPost(snapshot.val());
-  });
 </script>
 
 </body>
-</html>
+  </html>
