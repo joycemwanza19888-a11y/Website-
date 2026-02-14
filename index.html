@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Zee Web - Henicks GPT Field Tech</title>
   <meta name="description" content="Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech. Share your talent, upload songs, images, and posts.">
-  <link rel="icon" href="data:," />
-
+  <link rel="icon" href="data:," /> <!-- Placeholder for HFT icon -->
   <style>
     /* BLACK & GOLD THEME */
     body { font-family: Arial; margin: 0; padding: 0; background: #111; color: #FFD700; }
@@ -21,7 +20,6 @@
     #aiChat { position: fixed; bottom: 80px; right: 20px; width: 300px; max-height: 400px; overflow-y: auto; background: #222; color: #FFD700; padding: 10px; border-radius: 10px; display: none; }
     #aiChat input { width: 80%; display: inline-block; }
     #aiChat button { width: 18%; display: inline-block; }
-    a { color: #FFD700; text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -35,19 +33,17 @@
   <div class="card">
     <h2>About Zee Web</h2>
     <p>
-      Welcome to Zee Web, the ultimate platform to share your talent, upload your songs, images, or creative posts. 
-      Every work is saved permanently, user-friendly, and fully mobile accessible. Henicks GPT AI is here to guide you.
+      Welcome to Zee Web, the ultimate platform to share your talent and creative posts. Every work is saved permanently, user-friendly, and fully mobile accessible. Henicks GPT AI is here to guide you.
     </p>
   </div>
 </section>
 
 <section id="mainSection">
   <div class="card">
-    <h2>Upload Work</h2>
-    <input type="file" id="fileInput">
-    <input type="text" id="postText" placeholder="Write something about your work">
+    <h2>Upload Work (Text Only)</h2>
+    <textarea id="postText" placeholder="Write something about your work"></textarea>
     <input type="text" id="postStyle" placeholder="Your talent/style">
-    <button onclick="uploadFile()">Upload</button>
+    <button onclick="uploadPost()">Upload</button>
     <p id="uploadStatus"></p>
   </div>
 
@@ -68,8 +64,6 @@
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
 
 <script>
@@ -77,74 +71,56 @@
   const firebaseConfig = {
     apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
     authDomain: "zeeworldyhi.firebaseapp.com",
+    databaseURL: "https://zeeworldyhi-default-rtdb.firebaseio.com",
     projectId: "zeeworldyhi",
     storageBucket: "zeeworldyhi.appspot.com",
     messagingSenderId: "154414924399",
-    appId: "1:154414924399:web:4817b6b3e7cb5f91ba439a",
-    measurementId: "G-SR2Q002XNL"
+    appId: "1:154414924399:web:4817b6b3e7cb5f91ba439a"
   };
 
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
-  firebase.analytics();
-  const storage = firebase.storage();      // Storage connection
-  const database = firebase.database();    // Realtime Database connection
+  const database = firebase.database();
 
-  // Upload file + post info
-  function uploadFile() {
-    const file = document.getElementById('fileInput').files[0];
-    const text = document.getElementById('postText').value;
-    const style = document.getElementById('postStyle').value;
-    if (!file) return alert("Select a file to upload");
+  // Upload text post
+  function uploadPost() {
+    const text = document.getElementById('postText').value.trim();
+    const style = document.getElementById('postStyle').value.trim();
+    if (!text) return alert("Write something before uploading!");
 
-    const filename = Date.now() + "_" + file.name;
-    const storageRef = storage.ref('uploads/' + filename);
-
-    const uploadTask = storageRef.put(file);
-
-    document.getElementById('uploadStatus').innerText = "Uploading...";
-
-    uploadTask.on('state_changed', 
-      snapshot => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        document.getElementById('uploadStatus').innerText = "Upload is " + progress.toFixed(0) + "% done";
-      },
-      error => document.getElementById('uploadStatus').innerText = "Error: " + error,
-      () => {
-        uploadTask.snapshot.ref.getDownloadURL().then(url => {
-          database.ref('posts').push({
-            fileURL: url,
-            fileName: file.name,
-            text: text,
-            style: style,
-            timestamp: Date.now()
-          });
-          document.getElementById('uploadStatus').innerText = "Upload complete!";
-          document.getElementById('fileInput').value = "";
-          document.getElementById('postText').value = "";
-          document.getElementById('postStyle').value = "";
-          listPosts();
-        });
+    const postRef = database.ref('posts').push();
+    postRef.set({
+      text: text,
+      style: style || 'No style',
+      timestamp: Date.now()
+    }, (error) => {
+      if (error) {
+        document.getElementById('uploadStatus').innerText = "Error uploading: " + error;
+      } else {
+        document.getElementById('uploadStatus').innerText = "Upload complete!";
+        document.getElementById('postText').value = "";
+        document.getElementById('postStyle').value = "";
+        listPosts();
       }
-    );
+    });
   }
 
-  // List posts from Realtime Database
+  // List posts
   function listPosts() {
     const feed = document.getElementById('feed');
     feed.innerHTML = "";
     database.ref('posts').orderByChild('timestamp').once('value', snapshot => {
-      const posts = snapshot.val();
-      if (!posts) return;
-      Object.keys(posts).reverse().forEach(key => {
-        const post = posts[key];
+      const posts = [];
+      snapshot.forEach(child => {
+        posts.push(child.val());
+      });
+      posts.reverse(); // newest first
+      posts.forEach(post => {
         const card = document.createElement('div');
         card.classList.add('card');
         card.innerHTML = `
-          <p><strong>Anonymous</strong> (${post.style || 'No style'})</p>
+          <p><strong>Anonymous</strong> (${post.style})</p>
           <p>${post.text}</p>
-          <a href="${post.fileURL}" target="_blank" download="${post.fileName}">Download File</a>
-          <img src="${post.fileURL}" alt="${post.fileName}" style="max-width:100%; margin-top:10px; border-radius:5px;">
         `;
         feed.appendChild(card);
       });
@@ -180,7 +156,7 @@
     messages.scrollTop = messages.scrollHeight;
   }
 
-  // Load posts when page opens
+  // Load posts on page load
   listPosts();
 </script>
 
