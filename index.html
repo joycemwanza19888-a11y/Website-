@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Zee Web - Henicks GPT Field Tech</title>
   <meta name="description" content="Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech. Share your talent, upload songs, images, and posts.">
-  <link rel="icon" href="data:," /> <!-- Placeholder for HFT icon -->
+  <link rel="icon" href="data:," /> <!-- Placeholder icon -->
+
   <style>
     /* BLACK & GOLD THEME */
     body { font-family: Arial; margin: 0; padding: 0; background: #111; color: #FFD700; }
@@ -33,9 +34,8 @@
   <div class="card">
     <h2>About Zee Web</h2>
     <p>
-      Welcome to Zee Web, the ultimate platform to share your talent, upload your songs, images, or creative posts, 
-      and showcase your style. Every work is saved permanently, user-friendly, and fully mobile accessible. 
-      Henicks GPT AI is here to guide and inspire you, making your experience legendary.
+      Welcome to Zee Web, the ultimate platform to share your talent, upload your songs, images, or creative posts. 
+      Every work is saved permanently, user-friendly, and fully mobile accessible.
     </p>
   </div>
 </section>
@@ -69,7 +69,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
 
 <script>
   // Firebase configuration
@@ -83,10 +83,12 @@
     measurementId: "G-SR2Q002XNL"
   };
 
+  // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   firebase.analytics();
-  const storage = firebase.storage();
-  const db = firebase.firestore();
+
+  const storage = firebase.storage();       // Firebase Storage
+  const database = firebase.database();     // Realtime Database
 
   // Upload file + post
   function uploadFile() {
@@ -94,13 +96,14 @@
     const text = document.getElementById('postText').value;
     const style = document.getElementById('postStyle').value;
     if (!file) return alert("Select a file to upload");
+
     const filename = Date.now() + "_" + file.name;
     const storageRef = storage.ref('uploads/' + filename);
     const uploadTask = storageRef.put(file);
 
     document.getElementById('uploadStatus').innerText = "Uploading...";
 
-    uploadTask.on('state_changed', 
+    uploadTask.on('state_changed',
       snapshot => {
         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         document.getElementById('uploadStatus').innerText = "Upload is " + progress.toFixed(0) + "% done";
@@ -108,7 +111,8 @@
       error => document.getElementById('uploadStatus').innerText = "Error: " + error,
       () => {
         uploadTask.snapshot.ref.getDownloadURL().then(url => {
-          db.collection('posts').add({
+          const postRef = database.ref('posts').push();
+          postRef.set({
             fileURL: url,
             fileName: file.name,
             text: text,
@@ -130,9 +134,11 @@
   function listPosts() {
     const feed = document.getElementById('feed');
     feed.innerHTML = "";
-    db.collection('posts').orderBy('timestamp','desc').get().then(snapshot => {
-      snapshot.forEach(doc => {
-        const post = doc.data();
+
+    database.ref('posts').orderByChild('timestamp').once('value', snapshot => {
+      const posts = [];
+      snapshot.forEach(child => posts.push(child.val()));
+      posts.reverse().forEach(post => {
         const card = document.createElement('div');
         card.classList.add('card');
         card.innerHTML = `
@@ -145,7 +151,7 @@
     });
   }
 
-  // Search posts
+  // Search/filter posts
   function filterFeed() {
     const query = document.getElementById('searchInput').value.toLowerCase();
     const cards = document.querySelectorAll('#feed .card');
@@ -176,8 +182,7 @@
 
   // Load posts on page load
   listPosts();
-
 </script>
 
 </body>
-</html>
+  </html>
