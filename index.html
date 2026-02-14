@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Zee Web - Henicks GPT Field Tech</title>
   <meta name="description" content="Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech. Share your talent, upload songs, images, and posts.">
-  <link rel="icon" href="data:," /> <!-- Placeholder icon -->
+  <link rel="icon" href="data:," />
 
   <style>
     /* BLACK & GOLD THEME */
@@ -21,6 +21,7 @@
     #aiChat { position: fixed; bottom: 80px; right: 20px; width: 300px; max-height: 400px; overflow-y: auto; background: #222; color: #FFD700; padding: 10px; border-radius: 10px; display: none; }
     #aiChat input { width: 80%; display: inline-block; }
     #aiChat button { width: 18%; display: inline-block; }
+    a { color: #FFD700; text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -35,7 +36,7 @@
     <h2>About Zee Web</h2>
     <p>
       Welcome to Zee Web, the ultimate platform to share your talent, upload your songs, images, or creative posts. 
-      Every work is saved permanently, user-friendly, and fully mobile accessible.
+      Every work is saved permanently, user-friendly, and fully mobile accessible. Henicks GPT AI is here to guide you.
     </p>
   </div>
 </section>
@@ -77,7 +78,7 @@
     apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
     authDomain: "zeeworldyhi.firebaseapp.com",
     projectId: "zeeworldyhi",
-    storageBucket: "zeeworldyhi.firebasestorage.app",
+    storageBucket: "zeeworldyhi.appspot.com",
     messagingSenderId: "154414924399",
     appId: "1:154414924399:web:4817b6b3e7cb5f91ba439a",
     measurementId: "G-SR2Q002XNL"
@@ -86,11 +87,10 @@
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   firebase.analytics();
+  const storage = firebase.storage();      // Storage connection
+  const database = firebase.database();    // Realtime Database connection
 
-  const storage = firebase.storage();       // Firebase Storage
-  const database = firebase.database();     // Realtime Database
-
-  // Upload file + post
+  // Upload file + post info
   function uploadFile() {
     const file = document.getElementById('fileInput').files[0];
     const text = document.getElementById('postText').value;
@@ -99,11 +99,12 @@
 
     const filename = Date.now() + "_" + file.name;
     const storageRef = storage.ref('uploads/' + filename);
+
     const uploadTask = storageRef.put(file);
 
     document.getElementById('uploadStatus').innerText = "Uploading...";
 
-    uploadTask.on('state_changed',
+    uploadTask.on('state_changed', 
       snapshot => {
         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         document.getElementById('uploadStatus').innerText = "Upload is " + progress.toFixed(0) + "% done";
@@ -111,47 +112,46 @@
       error => document.getElementById('uploadStatus').innerText = "Error: " + error,
       () => {
         uploadTask.snapshot.ref.getDownloadURL().then(url => {
-          const postRef = database.ref('posts').push();
-          postRef.set({
+          database.ref('posts').push({
             fileURL: url,
             fileName: file.name,
             text: text,
             style: style,
             timestamp: Date.now()
-          }).then(() => {
-            document.getElementById('uploadStatus').innerText = "Upload complete!";
-            document.getElementById('fileInput').value = "";
-            document.getElementById('postText').value = "";
-            document.getElementById('postStyle').value = "";
-            listPosts();
           });
+          document.getElementById('uploadStatus').innerText = "Upload complete!";
+          document.getElementById('fileInput').value = "";
+          document.getElementById('postText').value = "";
+          document.getElementById('postStyle').value = "";
+          listPosts();
         });
       }
     );
   }
 
-  // List posts
+  // List posts from Realtime Database
   function listPosts() {
     const feed = document.getElementById('feed');
     feed.innerHTML = "";
-
     database.ref('posts').orderByChild('timestamp').once('value', snapshot => {
-      const posts = [];
-      snapshot.forEach(child => posts.push(child.val()));
-      posts.reverse().forEach(post => {
+      const posts = snapshot.val();
+      if (!posts) return;
+      Object.keys(posts).reverse().forEach(key => {
+        const post = posts[key];
         const card = document.createElement('div');
         card.classList.add('card');
         card.innerHTML = `
           <p><strong>Anonymous</strong> (${post.style || 'No style'})</p>
           <p>${post.text}</p>
-          <a href="${post.fileURL}" download="${post.fileName}">Download File</a>
+          <a href="${post.fileURL}" target="_blank" download="${post.fileName}">Download File</a>
+          <img src="${post.fileURL}" alt="${post.fileName}" style="max-width:100%; margin-top:10px; border-radius:5px;">
         `;
         feed.appendChild(card);
       });
     });
   }
 
-  // Search/filter posts
+  // Search posts
   function filterFeed() {
     const query = document.getElementById('searchInput').value.toLowerCase();
     const cards = document.querySelectorAll('#feed .card');
@@ -180,9 +180,9 @@
     messages.scrollTop = messages.scrollHeight;
   }
 
-  // Load posts on page load
+  // Load posts when page opens
   listPosts();
 </script>
 
 </body>
-  </html>
+</html>
