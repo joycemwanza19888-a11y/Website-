@@ -9,13 +9,17 @@
     body { font-family: Arial; margin:0; padding:0; background:#111; color:#FFD700; }
     header { background:#000; padding:15px; text-align:center; }
     section { padding:20px; }
-    .card { background:#222; padding:15px; margin-bottom:15px; border-radius:8px; }
+    .card { padding:15px; margin-bottom:15px; border-radius:8px; }
+    .sent { background:#FFD700; color:#111; text-align:right; max-width:70%; margin-left:auto; margin-right:10px; padding:10px; border-radius:15px; }
+    .received { background:#333; color:#FFD700; text-align:left; max-width:70%; margin-left:10px; margin-right:auto; padding:10px; border-radius:15px; }
     input, textarea { width:100%; margin:5px 0; padding:8px; border-radius:5px; border:none; }
     button { background:#FFD700; color:#111; border:none; padding:10px; border-radius:5px; cursor:pointer; }
     button:hover { opacity:0.9; }
-    #posts .card { background:#1a1a1a; }
-    #chatInput { display:flex; gap:5px; }
-    #chatInput input { flex:1; }
+    #posts { overflow-y: scroll; height: 400px; margin-bottom:20px; }
+    #chatInput { display:flex; gap:10px; margin-top:15px; }
+    #chatInput input { flex:1; padding:10px; background:#1a1a1a; border-radius:5px; color:#FFD700; }
+    #chatInput button { background:#FFD700; padding:10px 20px; border-radius:5px; cursor:pointer; }
+    #authForms { display: flex; flex-direction: column; align-items: center; gap: 10px; }
   </style>
 </head>
 <body>
@@ -24,6 +28,23 @@
   <h1>Zee Web Chat</h1>
   <p>Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech</p>
 </header>
+
+<!-- Authentication Forms -->
+<section id="authForms">
+  <div>
+    <h2>Sign Up</h2>
+    <input type="email" id="signUpEmail" placeholder="Enter your email">
+    <input type="password" id="signUpPassword" placeholder="Enter your password">
+    <button onclick="signUp()">Sign Up</button>
+  </div>
+
+  <div>
+    <h2>Log In</h2>
+    <input type="email" id="loginEmail" placeholder="Enter your email">
+    <input type="password" id="loginPassword" placeholder="Enter your password">
+    <button onclick="logIn()">Log In</button>
+  </div>
+</section>
 
 <section>
   <div class="card">
@@ -44,10 +65,11 @@
 
 <!-- Firebase v8 SDK -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-  // Firebase configuration (your database URL included)
+  // Firebase config
   var firebaseConfig = {
     apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
     authDomain: "zeeworldyhi.firebaseapp.com",
@@ -61,27 +83,48 @@
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   var database = firebase.database();
+  var auth = firebase.auth();
 
-  // DOM elements
-  var nameInput = document.getElementById('nameInput');
-  var textInput = document.getElementById('textInput');
-  var statusP = document.getElementById('status');
-  var postsDiv = document.getElementById('posts');
+  // Sign Up function
+  function signUp() {
+    var email = document.getElementById('signUpEmail').value;
+    var password = document.getElementById('signUpPassword').value;
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(function(userCredential) {
+        alert("Signed Up Successfully!");
+      })
+      .catch(function(error) {
+        alert("Error: " + error.message);
+      });
+  }
+
+  // Log In function
+  function logIn() {
+    var email = document.getElementById('loginEmail').value;
+    var password = document.getElementById('loginPassword').value;
+    auth.signInWithEmailAndPassword(email, password)
+      .then(function(userCredential) {
+        alert("Logged In Successfully!");
+      })
+      .catch(function(error) {
+        alert("Error: " + error.message);
+      });
+  }
 
   // Send message function
   function sendMessage() {
-    var name = nameInput.value || "Anonymous";
-    var text = textInput.value;
+    var name = document.getElementById('nameInput').value || "Anonymous";
+    var text = document.getElementById('textInput').value;
     if (!text) return alert("Write something before sending!");
 
     var messageData = { name: name, text: text, timestamp: Date.now() };
     var newMessageRef = database.ref('messages').push();
     newMessageRef.set(messageData, function(error) {
       if (error) {
-        statusP.innerText = "Error: " + error;
+        document.getElementById('status').innerText = "Error: " + error;
       } else {
-        statusP.innerText = "Message sent!";
-        textInput.value = "";
+        document.getElementById('status').innerText = "Message sent!";
+        document.getElementById('textInput').value = "";
       }
     });
   }
@@ -89,7 +132,7 @@
   // Real-time listener for messages
   var messagesRef = database.ref('messages');
   messagesRef.on('value', function(snapshot) {
-    postsDiv.innerHTML = "";
+    document.getElementById('posts').innerHTML = "";
     var messages = snapshot.val();
     if (!messages) return;
 
@@ -99,14 +142,16 @@
 
     sortedKeys.forEach(function(key) {
       var msg = messages[key];
+      var messageClass = msg.name === document.getElementById('nameInput').value ? "sent" : "received";
       var card = document.createElement('div');
-      card.classList.add('card');
+      card.classList.add(messageClass);
       card.innerHTML = "<p><strong>" + msg.name + "</strong></p><p>" + msg.text + "</p>";
-      postsDiv.appendChild(card);
-      postsDiv.scrollTop = postsDiv.scrollHeight; // auto-scroll
+      document.getElementById('posts').appendChild(card);
+      document.getElementById('posts').scrollTop = document.getElementById('posts').scrollHeight;
     });
   });
+
 </script>
 
 </body>
-</html>
+    </html>
