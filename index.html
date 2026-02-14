@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Zee Web - Henicks GPT Field Tech</title>
+  <title>Zee Web Chat - Henicks GPT Field Tech</title>
   <meta name="description" content="Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech. Share your talent and posts.">
   <style>
     body { font-family: Arial; margin:0; padding:0; background:#111; color:#FFD700; }
@@ -14,37 +14,40 @@
     button { background:#FFD700; color:#111; border:none; padding:10px; border-radius:5px; cursor:pointer; }
     button:hover { opacity:0.9; }
     #posts .card { background:#1a1a1a; }
+    #chatInput { display:flex; gap:5px; }
+    #chatInput input { flex:1; }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>Zee Web</h1>
+  <h1>Zee Web Chat</h1>
   <p>Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech</p>
 </header>
 
 <section>
   <div class="card">
-    <h2>Share Your Post</h2>
-    <input type="text" id="nameInput" placeholder="Your Name">
-    <input type="text" id="styleInput" placeholder="Your Talent/Style">
-    <textarea id="textInput" placeholder="Write something about your work"></textarea>
-    <button onclick="postText()">Upload Post</button>
+    <h2>Send Message</h2>
+    <div id="chatInput">
+      <input type="text" id="nameInput" placeholder="Your Name">
+      <input type="text" id="textInput" placeholder="Type a message">
+      <button onclick="sendMessage()">Send</button>
+    </div>
     <p id="status"></p>
   </div>
 </section>
 
 <section>
-  <h2>Posts</h2>
+  <h2>Chat</h2>
   <div id="posts"></div>
 </section>
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
+<!-- Firebase v10 SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-<script>
-  // Firebase configuration
+  // Your Firebase config (databaseURL included)
   const firebaseConfig = {
     apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
     authDomain: "zeeworldyhi.firebaseapp.com",
@@ -56,47 +59,53 @@
   };
 
   // Initialize Firebase
-  const app = firebase.initializeApp(firebaseConfig);
-  const database = firebase.database();
+  const app = initializeApp(firebaseConfig);
+  const database = getDatabase(app);
 
-  // Upload text to Realtime Database
-  function postText() {
-    const name = document.getElementById('nameInput').value || "Anonymous";
-    const style = document.getElementById('styleInput').value || "No style";
-    const text = document.getElementById('textInput').value;
-    if (!text) return alert("Write something before posting!");
+  // DOM elements
+  const nameInput = document.getElementById('nameInput');
+  const textInput = document.getElementById('textInput');
+  const statusP = document.getElementById('status');
+  const postsDiv = document.getElementById('posts');
 
-    const postData = { name, style, text, timestamp: Date.now() };
-    const newPostRef = database.ref('posts').push();
-    newPostRef.set(postData, (error) => {
-      if (error) {
-        document.getElementById('status').innerText = "Error: " + error;
-      } else {
-        document.getElementById('status').innerText = "Post uploaded!";
-        document.getElementById('nameInput').value = "";
-        document.getElementById('styleInput').value = "";
-        document.getElementById('textInput').value = "";
-      }
-    });
+  // Function to send message
+  function sendMessage() {
+    const name = nameInput.value || "Anonymous";
+    const text = textInput.value;
+    if (!text) return alert("Write something before sending!");
+
+    const messageData = { name, text, timestamp: Date.now() };
+    const newMessageRef = push(ref(database, 'messages'));
+
+    set(newMessageRef, messageData)
+      .then(() => {
+        statusP.innerText = "Message sent!";
+        textInput.value = "";
+      })
+      .catch(error => {
+        statusP.innerText = "Error: " + error;
+      });
   }
 
-  // Load posts and display
-  const postsDiv = document.getElementById('posts');
-  const postsRef = database.ref('posts');
-  postsRef.on('value', (snapshot) => {
+  // Real-time listener for messages
+  const messagesRef = ref(database, 'messages');
+  onValue(messagesRef, (snapshot) => {
     postsDiv.innerHTML = "";
-    const posts = snapshot.val();
-    if (!posts) return;
-    const sortedKeys = Object.keys(posts).sort((a,b) => posts[b].timestamp - posts[a].timestamp);
+    const messages = snapshot.val();
+    if (!messages) return;
+
+    const sortedKeys = Object.keys(messages).sort((a,b) => messages[a].timestamp - messages[b].timestamp);
     sortedKeys.forEach(key => {
-      const post = posts[key];
+      const msg = messages[key];
       const card = document.createElement('div');
       card.classList.add('card');
-      card.innerHTML = `<p><strong>${post.name}</strong> (${post.style})</p><p>${post.text}</p>`;
+      card.innerHTML = `<p><strong>${msg.name}</strong></p><p>${msg.text}</p>`;
       postsDiv.appendChild(card);
+      postsDiv.scrollTop = postsDiv.scrollHeight; // auto-scroll
     });
   });
+
 </script>
 
 </body>
-             </html>
+  </html>
