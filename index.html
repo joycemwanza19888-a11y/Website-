@@ -1,46 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zee Web - Henicks GPT Field Tech</title>
-<meta name="description" content="Website created by Henry Tallen, Zee. Share your talent, upload text posts.">
-<style>
-  body { font-family: Arial; margin: 0; padding: 0; background: #111; color: #FFD700; }
-  header { background: #000; color: #FFD700; padding: 15px; text-align: center; }
-  section { padding: 20px; }
-  .card { background: #222; padding: 15px; margin-bottom: 15px; border-radius: 8px; color: #FFD700; }
-  input, textarea { width: 100%; margin: 5px 0; padding: 8px; border-radius: 5px; border: none; }
-  button { background: #FFD700; color: #111; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
-  button:hover { opacity: 0.9; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zee Web - Henicks GPT Field Tech</title>
+  <meta name="description" content="Website created by Henry Tallen, Zee. Share your talent and information.">
+  <link rel="icon" href="data:," />
+  <style>
+    body { font-family: Arial; margin: 0; padding: 0; background: #111; color: #FFD700; }
+    header { background: #000; color: #FFD700; padding: 15px; text-align: center; }
+    section { padding: 20px; }
+    .card { background: #222; padding: 15px; margin-bottom: 15px; border-radius: 8px; color: #FFD700; }
+    input, textarea { width: 100%; margin: 5px 0; padding: 8px; border-radius: 5px; border: none; }
+    button { background: #FFD700; color: #111; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
+    button:hover { opacity: 0.9; }
+    #posts .card { background: #1a1a1a; }
+  </style>
 </head>
 <body>
 
 <header>
   <h1>Zee Web</h1>
-  <p>Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech</p>
+  <p>Website created by Henry Tallen, Zee</p>
 </header>
 
 <section>
   <div class="card">
-    <h2>Share Your Work</h2>
-    <input type="text" id="nameInput" placeholder="Your name">
-    <input type="text" id="styleInput" placeholder="Your talent/style">
-    <textarea id="textInput" placeholder="Write something about your work"></textarea>
-    <button onclick="postText()">Post</button>
+    <h2>Upload Text</h2>
+    <input type="text" id="nameInput" placeholder="Your Name">
+    <input type="text" id="titleInput" placeholder="Title/Style">
+    <textarea id="textInput" placeholder="Write something about yourself..."></textarea>
+    <button onclick="uploadText()">Upload</button>
+    <p id="status"></p>
   </div>
-
-  <h2>Posts</h2>
-  <div id="postsContainer"></div>
 </section>
 
-<!-- Firebase SDK -->
+<section>
+  <h2>Posts</h2>
+  <div id="posts"></div>
+</section>
+
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
 
 <script>
-  // --- Firebase config ---
+  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
     authDomain: "zeeworldyhi.firebaseapp.com",
@@ -55,57 +60,40 @@
   const app = firebase.initializeApp(firebaseConfig);
   const database = firebase.database();
 
-  // Function to post text
-  function postText() {
-    const name = document.getElementById('nameInput').value.trim() || "Anonymous";
-    const style = document.getElementById('styleInput').value.trim() || "No style";
+  // Upload text to Realtime Database
+  function uploadText() {
+    const name = document.getElementById('nameInput').value.trim();
+    const title = document.getElementById('titleInput').value.trim();
     const text = document.getElementById('textInput').value.trim();
-    if (!text) { alert("Please write something"); return; }
+    if (!text) return alert("Please write something!");
 
-    const postData = {
-      name: name,
-      style: style,
+    const postRef = database.ref('posts').push();
+    postRef.set({
+      name: name || "Anonymous",
+      title: title || "No style",
       text: text,
       timestamp: Date.now()
-    };
-
-    // Push to Firebase
-    database.ref('posts').push(postData, (error) => {
-      if (error) {
-        alert("Error posting: " + error);
-      } else {
-        // Clear inputs
-        document.getElementById('nameInput').value = "";
-        document.getElementById('styleInput').value = "";
-        document.getElementById('textInput').value = "";
-      }
     });
+
+    document.getElementById('status').innerText = "Post uploaded!";
+    document.getElementById('nameInput').value = "";
+    document.getElementById('titleInput').value = "";
+    document.getElementById('textInput').value = "";
   }
 
-  // Function to display posts
-  function displayPosts() {
-    const container = document.getElementById('postsContainer');
-    container.innerHTML = "";
-    database.ref('posts').orderByChild('timestamp').once('value', snapshot => {
-      const posts = snapshot.val();
-      if (!posts) return;
-      // Sort descending
-      const sortedPosts = Object.values(posts).sort((a, b) => b.timestamp - a.timestamp);
-      sortedPosts.forEach(post => {
-        const div = document.createElement('div');
-        div.classList.add('card');
-        div.innerHTML = `<p><strong>${post.name}</strong> (${post.style})</p>
-                         <p>${post.text}</p>`;
-        container.appendChild(div);
-      });
-    });
-  }
-
-  // Load posts every 2 seconds (or on page load)
-  setInterval(displayPosts, 2000);
-  displayPosts();
-
+  // Display posts from Realtime Database
+  const postsDiv = document.getElementById('posts');
+  database.ref('posts').orderByChild('timestamp').on('child_added', snapshot => {
+    const post = snapshot.val();
+    const card = document.createElement('div');
+    card.classList.add('card');
+    card.innerHTML = `
+      <p><strong>${post.name}</strong> (${post.title})</p>
+      <p>${post.text}</p>
+    `;
+    postsDiv.prepend(card);
+  });
 </script>
 
 </body>
-  </html>
+</html>
