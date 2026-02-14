@@ -42,13 +42,13 @@
   <div id="posts"></div>
 </section>
 
-<!-- Firebase v10 SDK -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+<!-- Firebase v8 SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-  // Your Firebase config (databaseURL included)
-  const firebaseConfig = {
+<script>
+  // Firebase configuration (your database URL included)
+  var firebaseConfig = {
     apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
     authDomain: "zeeworldyhi.firebaseapp.com",
     databaseURL: "https://zeeworldyhi-default-rtdb.firebaseio.com/",
@@ -59,53 +59,54 @@
   };
 
   // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const database = getDatabase(app);
+  firebase.initializeApp(firebaseConfig);
+  var database = firebase.database();
 
   // DOM elements
-  const nameInput = document.getElementById('nameInput');
-  const textInput = document.getElementById('textInput');
-  const statusP = document.getElementById('status');
-  const postsDiv = document.getElementById('posts');
+  var nameInput = document.getElementById('nameInput');
+  var textInput = document.getElementById('textInput');
+  var statusP = document.getElementById('status');
+  var postsDiv = document.getElementById('posts');
 
-  // Function to send message
+  // Send message function
   function sendMessage() {
-    const name = nameInput.value || "Anonymous";
-    const text = textInput.value;
+    var name = nameInput.value || "Anonymous";
+    var text = textInput.value;
     if (!text) return alert("Write something before sending!");
 
-    const messageData = { name, text, timestamp: Date.now() };
-    const newMessageRef = push(ref(database, 'messages'));
-
-    set(newMessageRef, messageData)
-      .then(() => {
+    var messageData = { name: name, text: text, timestamp: Date.now() };
+    var newMessageRef = database.ref('messages').push();
+    newMessageRef.set(messageData, function(error) {
+      if (error) {
+        statusP.innerText = "Error: " + error;
+      } else {
         statusP.innerText = "Message sent!";
         textInput.value = "";
-      })
-      .catch(error => {
-        statusP.innerText = "Error: " + error;
-      });
+      }
+    });
   }
 
   // Real-time listener for messages
-  const messagesRef = ref(database, 'messages');
-  onValue(messagesRef, (snapshot) => {
+  var messagesRef = database.ref('messages');
+  messagesRef.on('value', function(snapshot) {
     postsDiv.innerHTML = "";
-    const messages = snapshot.val();
+    var messages = snapshot.val();
     if (!messages) return;
 
-    const sortedKeys = Object.keys(messages).sort((a,b) => messages[a].timestamp - messages[b].timestamp);
-    sortedKeys.forEach(key => {
-      const msg = messages[key];
-      const card = document.createElement('div');
+    var sortedKeys = Object.keys(messages).sort(function(a,b) {
+      return messages[a].timestamp - messages[b].timestamp;
+    });
+
+    sortedKeys.forEach(function(key) {
+      var msg = messages[key];
+      var card = document.createElement('div');
       card.classList.add('card');
-      card.innerHTML = `<p><strong>${msg.name}</strong></p><p>${msg.text}</p>`;
+      card.innerHTML = "<p><strong>" + msg.name + "</strong></p><p>" + msg.text + "</p>";
       postsDiv.appendChild(card);
       postsDiv.scrollTop = postsDiv.scrollHeight; // auto-scroll
     });
   });
-
 </script>
 
 </body>
-  </html>
+</html>
