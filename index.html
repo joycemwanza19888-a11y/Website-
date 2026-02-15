@@ -3,53 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zee Web - Henicks GPT Field Tech</title>
+<title>Zee Web Chat</title>
 <style>
-  body { font-family: Arial; margin:0; padding:0; background:#111; color:#00FF00; }
-  header { background:#000; padding:15px; text-align:center; color:#00FF00; }
-  h1 { margin:0; font-size:24px; }
+  body { margin:0; padding:0; font-family: Arial; background:#111; color:#fff; }
+  header { background:#000; padding:15px; text-align:center; }
+  h1 { margin:0; color:#00FF00; }
   .container { padding:15px; }
-  .card { background:#222; padding:15px; margin-bottom:15px; border-radius:8px; color:#fff; word-break:break-word; }
-  .pre-info { background:#1a1a1a; padding:15px; border-radius:8px; margin-bottom:20px; }
-  input, textarea { width:100%; margin:5px 0; padding:10px; border-radius:5px; border:none; }
-  button { background:#00FF00; color:#111; border:none; padding:10px 15px; border-radius:5px; cursor:pointer; margin-top:5px; }
+  .messages { max-height:70vh; overflow-y:auto; margin-bottom:10px; }
+  .bubble { padding:10px 15px; border-radius:15px; margin:5px 0; display:inline-block; max-width:80%; word-break:break-word; }
+  .bubble.self { background:#00FF00; color:#000; align-self:flex-start; }
+  .bubble.other { background:#007BFF; color:#fff; align-self:flex-end; }
+  .input-area { display:flex; gap:5px; }
+  input { flex:1; padding:10px; border-radius:20px; border:none; }
+  button { padding:10px 15px; border:none; border-radius:20px; background:#00FF00; color:#000; cursor:pointer; }
   button:hover { opacity:0.9; }
-  .post-input { margin-bottom:20px; }
-  .posts-title { margin-top:20px; margin-bottom:10px; font-size:20px; }
+  .messages-wrapper { display:flex; flex-direction:column; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Zee Web</h1>
+  <h1>Zee Web Chat</h1>
   <p>Henicks GPT Field Tech</p>
 </header>
 
 <div class="container">
+  <div class="messages-wrapper messages" id="messages"></div>
 
-  <!-- Pre-inserted info -->
-  <div class="pre-info">
-    <h2>About Zee Man</h2>
-    <p>Name: Henry Tallen (Zee)</p>
-    <p>Grade: 12, Nseko Day Secondary School</p>
-    <p>Location: Near Success Shop</p>
-    <p>TikTok: <a href="https://www.tiktok.com/@zee_world_comedy" target="_blank">@zee_world_comedy</a> (1.6K followers)</p>
-    <p>I make apps, sometimes music, love creating new things and ideas.</p>
+  <div class="input-area">
+    <input type="text" id="messageInput" placeholder="Type your message...">
+    <button id="sendBtn">Send</button>
   </div>
-
-  <!-- Input form -->
-  <div class="card post-input">
-    <h3>Share Your Work / Info</h3>
-    <input type="text" id="titleInput" placeholder="Title / Subject">
-    <textarea id="textInput" placeholder="Write about yourself, your work, etc."></textarea>
-    <input type="text" id="linkInput" placeholder="Optional: Image or Audio URL">
-    <button id="uploadBtn">Upload</button>
-    <p id="status"></p>
-  </div>
-
-  <div class="posts-title">All Posts</div>
-  <div id="posts"></div>
-
 </div>
 
 <!-- Firebase SDKs -->
@@ -57,7 +41,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
 
 <script>
-  // Firebase configuration
+  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
     authDomain: "zeeworldyhi.firebaseapp.com",
@@ -71,61 +55,52 @@
   // Initialize Firebase
   const app = firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
-  const postsRef = db.ref('posts'); // exact path
+  const messagesRef = db.ref('messages'); // all messages go here
 
-  // DOM elements
-  const postsDiv = document.getElementById('posts');
-  const uploadBtn = document.getElementById('uploadBtn');
-  const titleInput = document.getElementById('titleInput');
-  const textInput = document.getElementById('textInput');
-  const linkInput = document.getElementById('linkInput');
-  const status = document.getElementById('status');
+  const messagesDiv = document.getElementById('messages');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
 
-  // Upload post
-  uploadBtn.addEventListener('click', () => {
-    const title = titleInput.value || "No title";
-    const text = textInput.value;
-    const link = linkInput.value || "";
+  // Simple random UID for mobile session (so messages have "self" vs "other")
+  const myUID = 'user_' + Math.floor(Math.random()*100000);
 
-    if(!text) return alert("Write something before uploading!");
+  // Send message
+  sendBtn.addEventListener('click', () => {
+    const text = messageInput.value.trim();
+    if(!text) return;
 
-    const postData = { title, text, link, timestamp: Date.now() };
+    const msgData = {
+      uid: myUID,
+      text: text,
+      timestamp: Date.now()
+    };
 
-    postsRef.push(postData, (err) => {
-      if(err){
-        status.innerText = "Error uploading post!";
-        console.error(err);
-      } else {
-        status.innerText = "Post uploaded!";
-        titleInput.value = "";
-        textInput.value = "";
-        linkInput.value = "";
-      }
+    messagesRef.push(msgData, err => {
+      if(err) alert("Error sending message!");
+      else messageInput.value = "";
     });
   });
 
-  // Load posts in real-time
-  postsRef.orderByChild('timestamp').on('value', snapshot => {
-    postsDiv.innerHTML = "";
-    const posts = snapshot.val();
-    if(!posts) return;
+  // Listen for new messages
+  messagesRef.orderByChild('timestamp').on('value', snapshot => {
+    messagesDiv.innerHTML = "";
+    const msgs = snapshot.val();
+    if(!msgs) return;
 
-    Object.keys(posts)
-      .sort((a,b) => posts[b].timestamp - posts[a].timestamp)
+    Object.keys(msgs)
+      .sort((a,b) => msgs[a].timestamp - msgs[b].timestamp)
       .forEach(k => {
-        const p = posts[k];
-        const card = document.createElement('div');
-        card.classList.add('card');
-
-        let html = `<h4>${p.title}</h4>`;
-        html += `<p>${p.text}</p>`;
-        if(p.link) html += `<p><a href="${p.link}" target="_blank">Media / Link</a></p>`;
-
-        card.innerHTML = html;
-        postsDiv.appendChild(card);
+        const m = msgs[k];
+        const div = document.createElement('div');
+        div.classList.add('bubble');
+        div.classList.add(m.uid === myUID ? 'self' : 'other');
+        div.innerText = m.text;
+        messagesDiv.appendChild(div);
       });
+
+    messagesDiv.scrollTop = messagesDiv.scrollHeight; // scroll to bottom
   });
 </script>
 
 </body>
-  </html>
+</html>
