@@ -75,11 +75,12 @@
   const postsDiv = document.getElementById('posts');
 
   // Upload post
-  function uploadPost(){
+  function uploadPost() {
     const title = document.getElementById('postTitle').value || "No title";
     const text = document.getElementById('postText').value;
     const link = document.getElementById('postLink').value || "";
-    if(!text) return alert("Write something!");
+
+    if (!text) return alert("Write something before uploading!");
 
     const postData = {
       title,
@@ -88,10 +89,9 @@
       timestamp: Date.now()
     };
 
-    const newRef = db.ref('posts').push();
-    newRef.set(postData, err => {
-      if(err){
-        document.getElementById('uploadStatus').innerText = "Error: "+err;
+    db.ref('posts').push(postData, function(error) {
+      if (error) {
+        document.getElementById('uploadStatus').innerText = "Error: " + error;
       } else {
         document.getElementById('uploadStatus').innerText = "Post uploaded!";
         document.getElementById('postTitle').value = "";
@@ -102,19 +102,22 @@
   }
 
   // Load posts dynamically
-  function loadPosts(){
-    db.ref('posts').on('value', snapshot => {
+  function loadPosts() {
+    db.ref('posts').orderByChild('timestamp').on('value', snapshot => {
       postsDiv.innerHTML = "";
       const posts = snapshot.val();
-      if(!posts) return;
-      const keys = Object.keys(posts).sort((a,b)=> posts[b].timestamp - posts[a].timestamp);
-      keys.forEach(k => {
-        const p = posts[k];
+      if (!posts) return;
+
+      // Display newest first
+      const keys = Object.keys(posts).sort((a, b) => posts[b].timestamp - posts[a].timestamp);
+
+      keys.forEach(key => {
+        const p = posts[key];
         const card = document.createElement('div');
         card.classList.add('card');
-        let html = `<p><strong>${p.title}</strong></p>`;
+        let html = `<h4>${p.title}</h4>`;
         html += `<p>${p.text}</p>`;
-        if(p.link) html += `<p><a href="${p.link}" target="_blank">Link / Media</a></p>`;
+        if(p.link) html += `<p><a href="${p.link}" target="_blank">Media / Link</a></p>`;
         card.innerHTML = html;
         postsDiv.appendChild(card);
       });
@@ -125,4 +128,4 @@
 </script>
 
 </body>
-                    </html>
+</html>
