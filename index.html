@@ -26,6 +26,7 @@
 </header>
 
 <div class="container">
+
   <!-- Pre-inserted info -->
   <div class="pre-info">
     <h2>About Zee Man</h2>
@@ -100,7 +101,7 @@
     });
   }
 
-  // Load posts
+  // Load posts dynamically
   function loadPosts(){
     db.ref('posts').on('value', snapshot => {
       postsDiv.innerHTML = "";
@@ -124,4 +125,4 @@
 </script>
 
 </body>
-  </html>
+                    </html>
