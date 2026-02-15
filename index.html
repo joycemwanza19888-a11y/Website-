@@ -27,7 +27,6 @@
 
 <div class="container">
 
-  <!-- Pre-inserted info -->
   <div class="pre-info">
     <h2>About Zee Man</h2>
     <p>Name: Henry Tallen (Zee)</p>
@@ -37,7 +36,6 @@
     <p>I make apps, sometimes music, love creating new things and ideas.</p>
   </div>
 
-  <!-- Post upload -->
   <div class="card post-input">
     <h3>Share Your Work / Info</h3>
     <input type="text" id="postTitle" placeholder="Title / Subject">
@@ -47,85 +45,69 @@
     <p id="uploadStatus"></p>
   </div>
 
-  <!-- Posts displayed -->
   <h3>All Posts</h3>
   <div id="posts"></div>
 </div>
 
-<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
 
 <script>
-  // Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
-    authDomain: "zeeworldyhi.firebaseapp.com",
-    databaseURL: "https://zeeworldyhi-default-rtdb.firebaseio.com/",
-    projectId: "zeeworldyhi",
-    storageBucket: "zeeworldyhi.appspot.com",
-    messagingSenderId: "154414924399",
-    appId: "1:154414924399:web:4817b6b3e7cb5f91ba439a"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
+  authDomain: "zeeworldyhi.firebaseapp.com",
+  databaseURL: "https://zeeworldyhi-default-rtdb.firebaseio.com/",
+  projectId: "zeeworldyhi",
+  storageBucket: "zeeworldyhi.appspot.com",
+  messagingSenderId: "154414924399",
+  appId: "1:154414924399:web:4817b6b3e7cb5f91ba439a"
+};
 
-  // Initialize Firebase
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-  const postsDiv = document.getElementById('posts');
+const postsDiv = document.getElementById('posts');
 
-  // Upload post
-  function uploadPost() {
-    const title = document.getElementById('postTitle').value || "No title";
-    const text = document.getElementById('postText').value;
-    const link = document.getElementById('postLink').value || "";
+function uploadPost() {
+  const title = document.getElementById('postTitle').value || "No title";
+  const text = document.getElementById('postText').value;
+  const link = document.getElementById('postLink').value || "";
 
-    if (!text) return alert("Write something before uploading!");
+  if(!text) return alert("Write something before uploading!");
 
-    const postData = {
-      title,
-      text,
-      link,
-      timestamp: Date.now()
-    };
+  const postData = { title, text, link, timestamp: Date.now() };
 
-    db.ref('posts').push(postData, function(error) {
-      if (error) {
-        document.getElementById('uploadStatus').innerText = "Error: " + error;
-      } else {
-        document.getElementById('uploadStatus').innerText = "Post uploaded!";
-        document.getElementById('postTitle').value = "";
-        document.getElementById('postText').value = "";
-        document.getElementById('postLink').value = "";
-      }
-    });
-  }
+  db.ref('posts').push(postData, function(err) {
+    if(err){
+      console.error("Firebase push error:", err);
+      document.getElementById('uploadStatus').innerText = "Error uploading post!";
+    } else {
+      document.getElementById('uploadStatus').innerText = "Post uploaded!";
+      document.getElementById('postTitle').value = "";
+      document.getElementById('postText').value = "";
+      document.getElementById('postLink').value = "";
+    }
+  });
+}
 
-  // Load posts dynamically
-  function loadPosts() {
-    db.ref('posts').orderByChild('timestamp').on('value', snapshot => {
-      postsDiv.innerHTML = "";
-      const posts = snapshot.val();
-      if (!posts) return;
+// Load posts
+db.ref('posts').orderByChild('timestamp').on('value', snapshot => {
+  postsDiv.innerHTML = "";
+  const posts = snapshot.val();
+  if(!posts) return;
 
-      // Display newest first
-      const keys = Object.keys(posts).sort((a, b) => posts[b].timestamp - posts[a].timestamp);
-
-      keys.forEach(key => {
-        const p = posts[key];
-        const card = document.createElement('div');
-        card.classList.add('card');
-        let html = `<h4>${p.title}</h4>`;
-        html += `<p>${p.text}</p>`;
-        if(p.link) html += `<p><a href="${p.link}" target="_blank">Media / Link</a></p>`;
-        card.innerHTML = html;
-        postsDiv.appendChild(card);
-      });
-    });
-  }
-
-  loadPosts();
+  Object.keys(posts).sort((a,b)=> posts[b].timestamp - posts[a].timestamp).forEach(k => {
+    const p = posts[k];
+    const card = document.createElement('div');
+    card.classList.add('card');
+    let html = `<h4>${p.title}</h4>`;
+    html += `<p>${p.text}</p>`;
+    if(p.link) html += `<p><a href="${p.link}" target="_blank">Media / Link</a></p>`;
+    card.innerHTML = html;
+    postsDiv.appendChild(card);
+  });
+});
 </script>
 
 </body>
-</html>
+  </html>
