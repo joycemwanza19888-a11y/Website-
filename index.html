@@ -1,251 +1,191 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zee Chat</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zee Web - Henicks GPT Field Tech</title>
 <style>
-body {
-  margin:0;
-  font-family: Arial, sans-serif;
-  background:#111;
-  color:white;
-}
-
-/* HEADER */
-header {
-  background:black;
-  padding:15px;
-  text-align:center;
-  color:#00ff66;
-  font-size:22px;
-  font-weight:bold;
-}
-
-/* AUTH SCREEN */
-#authForms {
-  padding:20px;
-  text-align:center;
-}
-
-#authForms input {
-  width:80%;
-  padding:12px;
-  margin:10px 0;
-  border:none;
-  border-radius:5px;
-  background:#222;
-  color:white;
-}
-
-#authForms button {
-  width:85%;
-  padding:12px;
-  margin-top:10px;
-  border:none;
-  border-radius:5px;
-  background:#00ff66;
-  color:black;
-  font-weight:bold;
-}
-
-/* CHAT SCREEN */
-#chatInterface {
-  display:none;
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-}
-
-#chatDisplay {
-  flex:1;
-  overflow-y:auto;
-  padding:10px;
-  margin-bottom:70px;
-}
-
-/* MESSAGE STYLES */
-.chat-box {
-  padding:8px 12px;
-  margin:6px 0;
-  border-radius:8px;
-  max-width:70%;
-  word-wrap:break-word;
-}
-
-.user1 {
-  background:#00ff66;
-  color:black;
-  align-self:flex-start;
-}
-
-.user2 {
-  background:#2196F3;
-  color:white;
-  align-self:flex-end;
-}
-
-/* INPUT BAR */
-#chatInput {
-  position:fixed;
-  bottom:0;
-  left:0;
-  width:100%;
-  display:flex;
-  padding:10px;
-  background:#111;
-}
-
-#chatInput input {
-  flex:1;
-  padding:12px;
-  border:none;
-  border-radius:5px;
-  background:#222;
-  color:white;
-}
-
-#chatInput button {
-  margin-left:5px;
-  padding:12px;
-  border:none;
-  border-radius:5px;
-  background:#00ff66;
-  color:black;
-  font-weight:bold;
-}
+  body { font-family: Arial; margin:0; padding:0; background:#111; color:#00FF00; }
+  .hidden { display:none; }
+  header { background:#000; padding:15px; text-align:center; color:#00FF00; }
+  h1 { margin:0; }
+  button { background:#00FF00; color:#111; border:none; padding:10px 15px; border-radius:5px; cursor:pointer; margin-top:5px; }
+  button:hover { opacity:0.9; }
+  input, textarea { width:100%; margin:5px 0; padding:8px; border-radius:5px; border:none; }
+  .container { padding:20px; }
+  .card { background:#222; padding:15px; margin-bottom:15px; border-radius:8px; color:#fff; }
+  .post-input { margin-bottom:20px; }
+  .pre-info { background:#1a1a1a; padding:15px; border-radius:8px; margin-bottom:20px; }
+  a { color:#00FF00; text-decoration:none; }
 </style>
 </head>
-
 <body>
 
-<header>Zee Chat</header>
+<header>
+  <h1>Zee Web</h1>
+  <p>Henicks GPT Field Tech</p>
+</header>
 
-<div id="authForms">
-  <h3>Sign Up</h3>
-  <input type="email" id="signUpEmail" placeholder="Email">
-  <input type="password" id="signUpPassword" placeholder="Password">
-  <button onclick="signUp()">Sign Up</button>
+<!-- LOGIN / SIGN UP SCREEN -->
+<div id="authScreen" class="container">
+  <h2>Welcome to Zee Web</h2>
+  <p>Please Login or Sign Up to continue</p>
 
-  <h3>Log In</h3>
-  <input type="email" id="loginEmail" placeholder="Email">
-  <input type="password" id="loginPassword" placeholder="Password">
-  <button onclick="logIn()">Log In</button>
-</div>
+  <div class="card">
+    <h3>Sign Up</h3>
+    <input type="email" id="signupEmail" placeholder="Email">
+    <input type="password" id="signupPass" placeholder="Password">
+    <button onclick="signUp()">Sign Up</button>
+  </div>
 
-<div id="chatInterface">
-  <div id="chatDisplay"></div>
-
-  <div id="chatInput">
-    <input type="text" id="textInput" placeholder="Type your message...">
-    <button onclick="sendMessage()">Send</button>
+  <div class="card">
+    <h3>Log In</h3>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPass" placeholder="Password">
+    <button onclick="logIn()">Log In</button>
   </div>
 </div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<!-- MAIN WEBSITE SCREEN -->
+<div id="mainScreen" class="container hidden">
+  <button onclick="logOut()" style="float:right;">Log Out</button>
+  <h2>Welcome to Zee Web Chat</h2>
+
+  <!-- Pre-inserted info -->
+  <div class="pre-info">
+    <h3>About Zee Man</h3>
+    <p>Name: Henry Tallen (Zee)</p>
+    <p>Grade: 12, Nseko Day Secondary School</p>
+    <p>Location: Near Success Shop</p>
+    <p>TikTok: <a href="https://www.tiktok.com/@zee_world_comedy" target="_blank">@zee_world_comedy</a> (1.6K followers)</p>
+    <p>I make apps, sometimes music, love creating new things and ideas.</p>
+  </div>
+
+  <!-- Post upload -->
+  <div class="card post-input">
+    <h3>Share Your Work / Info</h3>
+    <input type="text" id="postTitle" placeholder="Title / Subject">
+    <textarea id="postText" placeholder="Write about yourself, your work, etc."></textarea>
+    <input type="text" id="postLink" placeholder="Optional: Image or Audio URL">
+    <button onclick="uploadPost()">Upload</button>
+    <p id="uploadStatus"></p>
+  </div>
+
+  <!-- Posts displayed -->
+  <h3>All Posts</h3>
+  <div id="posts"></div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
 
 <script>
-var firebaseConfig = {
-  apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
-  authDomain: "zeeworldyhi.firebaseapp.com",
-  databaseURL: "https://zeeworldyhi-default-rtdb.firebaseio.com/",
-  projectId: "zeeworldyhi",
-  storageBucket: "zeeworldyhi.appspot.com",
-  messagingSenderId: "154414924399",
-  appId: "1:154414924399:web:4817b6b3e7cb5f91ba439a"
-};
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
+    authDomain: "zeeworldyhi.firebaseapp.com",
+    databaseURL: "https://zeeworldyhi-default-rtdb.firebaseio.com/",
+    projectId: "zeeworldyhi",
+    storageBucket: "zeeworldyhi.appspot.com",
+    messagingSenderId: "154414924399",
+    appId: "1:154414924399:web:4817b6b3e7cb5f91ba439a"
+  };
 
-firebase.initializeApp(firebaseConfig);
+  // Initialize Firebase
+  const app = firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
 
-var auth = firebase.auth();
-var database = firebase.database();
-var currentUser;
-var chatRef;
+  const authScreen = document.getElementById('authScreen');
+  const mainScreen = document.getElementById('mainScreen');
+  const postsDiv = document.getElementById('posts');
 
-/* AUTO SWITCH SCREEN */
-auth.onAuthStateChanged(function(user) {
-  if (user) {
-    currentUser = user;
-    document.getElementById("authForms").style.display = "none";
-    document.getElementById("chatInterface").style.display = "flex";
-    startChat();
-  } else {
-    document.getElementById("authForms").style.display = "block";
-    document.getElementById("chatInterface").style.display = "none";
-  }
-});
-
-/* SIGN UP */
-function signUp() {
-  var email = document.getElementById("signUpEmail").value;
-  var password = document.getElementById("signUpPassword").value;
-
-  auth.createUserWithEmailAndPassword(email, password)
-    .catch(function(error){
-      alert(error.message);
-    });
-}
-
-/* LOGIN */
-function logIn() {
-  var email = document.getElementById("loginEmail").value;
-  var password = document.getElementById("loginPassword").value;
-
-  auth.signInWithEmailAndPassword(email, password)
-    .catch(function(error){
-      alert(error.message);
-    });
-}
-
-/* START CHAT */
-function startChat() {
-
-  var friendId = "friendUserId"; 
-  var chatRoomId = [currentUser.uid, friendId].sort().join("-");
-  chatRef = database.ref("chats/" + chatRoomId + "/messages");
-
-  chatRef.off();
-  document.getElementById("chatDisplay").innerHTML = "";
-
-  chatRef.on("child_added", function(snapshot){
-    displayMessage(snapshot.val());
-  });
-}
-
-/* SEND MESSAGE */
-function sendMessage() {
-  var textInput = document.getElementById("textInput");
-  var text = textInput.value;
-  if (!text) return;
-
-  chatRef.push({
-    user: currentUser.email,
-    text: text,
-    timestamp: Date.now()
+  // Check auth state
+  auth.onAuthStateChanged(user => {
+    if(user){
+      authScreen.classList.add('hidden');
+      mainScreen.classList.remove('hidden');
+      loadPosts();
+    } else {
+      authScreen.classList.remove('hidden');
+      mainScreen.classList.add('hidden');
+    }
   });
 
-  textInput.value = "";
-}
-
-/* DISPLAY MESSAGE */
-function displayMessage(msg) {
-  var chatDisplay = document.getElementById("chatDisplay");
-  var msgDiv = document.createElement("div");
-
-  if (msg.user === currentUser.email) {
-    msgDiv.className = "chat-box user1";
-  } else {
-    msgDiv.className = "chat-box user2";
+  // Sign Up
+  function signUp(){
+    const email = document.getElementById('signupEmail').value;
+    const pass = document.getElementById('signupPass').value;
+    if(!email || !pass) return alert("Fill both fields!");
+    auth.createUserWithEmailAndPassword(email, pass)
+      .then(() => alert("Sign Up successful!"))
+      .catch(err => alert(err.message));
   }
 
-  msgDiv.innerHTML = msg.text;
-  chatDisplay.appendChild(msgDiv);
-  chatDisplay.scrollTop = chatDisplay.scrollHeight;
-}
+  // Log In
+  function logIn(){
+    const email = document.getElementById('loginEmail').value;
+    const pass = document.getElementById('loginPass').value;
+    if(!email || !pass) return alert("Fill both fields!");
+    auth.signInWithEmailAndPassword(email, pass)
+      .then(() => console.log("Login successful"))
+      .catch(err => alert(err.message));
+  }
+
+  // Log Out
+  function logOut(){
+    auth.signOut();
+  }
+
+  // Upload Post
+  function uploadPost(){
+    const title = document.getElementById('postTitle').value || "No title";
+    const text = document.getElementById('postText').value;
+    const link = document.getElementById('postLink').value || "";
+    if(!text) return alert("Write something!");
+    const postData = {
+      uid: auth.currentUser.uid,
+      email: auth.currentUser.email,
+      title,
+      text,
+      link,
+      timestamp: Date.now()
+    };
+    const newRef = db.ref('posts').push();
+    newRef.set(postData, err => {
+      if(err){
+        document.getElementById('uploadStatus').innerText = "Error: "+err;
+      } else {
+        document.getElementById('uploadStatus').innerText = "Post uploaded!";
+        document.getElementById('postTitle').value = "";
+        document.getElementById('postText').value = "";
+        document.getElementById('postLink').value = "";
+      }
+    });
+  }
+
+  // Load posts
+  function loadPosts(){
+    db.ref('posts').on('value', snapshot => {
+      postsDiv.innerHTML = "";
+      const posts = snapshot.val();
+      if(!posts) return;
+      const keys = Object.keys(posts).sort((a,b)=> posts[b].timestamp - posts[a].timestamp);
+      keys.forEach(k => {
+        const p = posts[k];
+        const card = document.createElement('div');
+        card.classList.add('card');
+        let html = `<p><strong>${p.title}</strong> by ${p.email}</p>`;
+        html += `<p>${p.text}</p>`;
+        if(p.link) html += `<p><a href="${p.link}" target="_blank">Link / Media</a></p>`;
+        card.innerHTML = html;
+        postsDiv.appendChild(card);
+      });
+    });
+  }
 </script>
 
 </body>
-      </html>
+  </html>
