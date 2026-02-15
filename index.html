@@ -73,7 +73,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Reference to posts
+// Use the exact "posts" node in Firebase
+const postsRef = db.ref('posts');
 const postsDiv = document.getElementById('posts');
 
 // Upload new post
@@ -86,7 +87,7 @@ function uploadPost() {
 
   const postData = { title, text, link, timestamp: Date.now() };
 
-  db.ref('posts').push(postData, function(err) {
+  postsRef.push(postData, function(err) {
     if(err){
       console.error("Firebase push error:", err);
       document.getElementById('uploadStatus').innerText = "Error uploading post!";
@@ -99,8 +100,8 @@ function uploadPost() {
   });
 }
 
-// Load and display posts
-db.ref('posts').orderByChild('timestamp').on('value', snapshot => {
+// Load and display posts in real-time
+postsRef.orderByChild('timestamp').on('value', snapshot => {
   postsDiv.innerHTML = "";
   const posts = snapshot.val();
   if(!posts) return;
@@ -123,4 +124,4 @@ db.ref('posts').orderByChild('timestamp').on('value', snapshot => {
 </script>
 
 </body>
-      </html>
+  </html>
