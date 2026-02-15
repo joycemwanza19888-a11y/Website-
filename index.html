@@ -8,7 +8,6 @@
   body { font-family: Arial; margin:0; padding:0; background:#111; color:#00FF00; }
   header { background:#000; padding:15px; text-align:center; color:#00FF00; }
   h1 { margin:0; font-size:24px; }
-  a { color:#00FF00; text-decoration:none; }
   .container { padding:15px; }
   .card { background:#222; padding:15px; margin-bottom:15px; border-radius:8px; color:#fff; word-break:break-word; }
   .pre-info { background:#1a1a1a; padding:15px; border-radius:8px; margin-bottom:20px; }
@@ -28,7 +27,7 @@
 
 <div class="container">
 
-  <!-- Pre-inserted information about you -->
+  <!-- Pre-inserted info -->
   <div class="pre-info">
     <h2>About Zee Man</h2>
     <p>Name: Henry Tallen (Zee)</p>
@@ -38,90 +37,95 @@
     <p>I make apps, sometimes music, love creating new things and ideas.</p>
   </div>
 
-  <!-- Input form for new posts -->
+  <!-- Input form -->
   <div class="card post-input">
     <h3>Share Your Work / Info</h3>
-    <input type="text" id="postTitle" placeholder="Title / Subject">
-    <textarea id="postText" placeholder="Write about yourself, your work, etc."></textarea>
-    <input type="text" id="postLink" placeholder="Optional: Image or Audio URL">
-    <button onclick="uploadPost()">Upload</button>
-    <p id="uploadStatus"></p>
+    <input type="text" id="titleInput" placeholder="Title / Subject">
+    <textarea id="textInput" placeholder="Write about yourself, your work, etc."></textarea>
+    <input type="text" id="linkInput" placeholder="Optional: Image or Audio URL">
+    <button id="uploadBtn">Upload</button>
+    <p id="status"></p>
   </div>
 
-  <!-- Posts will appear here -->
   <div class="posts-title">All Posts</div>
   <div id="posts"></div>
+
 </div>
 
-<!-- Firebase SDK -->
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
 
 <script>
-// Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
-  authDomain: "zeeworldyhi.firebaseapp.com",
-  databaseURL: "https://zeeworldyhi-default-rtdb.firebaseio.com/",
-  projectId: "zeeworldyhi",
-  storageBucket: "zeeworldyhi.appspot.com",
-  messagingSenderId: "154414924399",
-  appId: "1:154414924399:web:4817b6b3e7cb5f91ba439a"
-};
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
+    authDomain: "zeeworldyhi.firebaseapp.com",
+    databaseURL: "https://zeeworldyhi-default-rtdb.firebaseio.com/",
+    projectId: "zeeworldyhi",
+    storageBucket: "zeeworldyhi.appspot.com",
+    messagingSenderId: "154414924399",
+    appId: "1:154414924399:web:4817b6b3e7cb5f91ba439a"
+  };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+  // Initialize Firebase
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const postsRef = db.ref('posts'); // exact path
 
-// Use the exact "posts" node in Firebase
-const postsRef = db.ref('posts');
-const postsDiv = document.getElementById('posts');
+  // DOM elements
+  const postsDiv = document.getElementById('posts');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const titleInput = document.getElementById('titleInput');
+  const textInput = document.getElementById('textInput');
+  const linkInput = document.getElementById('linkInput');
+  const status = document.getElementById('status');
 
-// Upload new post
-function uploadPost() {
-  const title = document.getElementById('postTitle').value || "No title";
-  const text = document.getElementById('postText').value;
-  const link = document.getElementById('postLink').value || "";
+  // Upload post
+  uploadBtn.addEventListener('click', () => {
+    const title = titleInput.value || "No title";
+    const text = textInput.value;
+    const link = linkInput.value || "";
 
-  if(!text) return alert("Write something before uploading!");
+    if(!text) return alert("Write something before uploading!");
 
-  const postData = { title, text, link, timestamp: Date.now() };
+    const postData = { title, text, link, timestamp: Date.now() };
 
-  postsRef.push(postData, function(err) {
-    if(err){
-      console.error("Firebase push error:", err);
-      document.getElementById('uploadStatus').innerText = "Error uploading post!";
-    } else {
-      document.getElementById('uploadStatus').innerText = "Post uploaded!";
-      document.getElementById('postTitle').value = "";
-      document.getElementById('postText').value = "";
-      document.getElementById('postLink').value = "";
-    }
-  });
-}
-
-// Load and display posts in real-time
-postsRef.orderByChild('timestamp').on('value', snapshot => {
-  postsDiv.innerHTML = "";
-  const posts = snapshot.val();
-  if(!posts) return;
-
-  Object.keys(posts)
-    .sort((a,b)=> posts[b].timestamp - posts[a].timestamp) // newest first
-    .forEach(k => {
-      const p = posts[k];
-      const card = document.createElement('div');
-      card.classList.add('card');
-
-      let html = `<h4>${p.title}</h4>`;
-      html += `<p>${p.text}</p>`;
-      if(p.link) html += `<p><a href="${p.link}" target="_blank">Media / Link</a></p>`;
-
-      card.innerHTML = html;
-      postsDiv.appendChild(card);
+    postsRef.push(postData, (err) => {
+      if(err){
+        status.innerText = "Error uploading post!";
+        console.error(err);
+      } else {
+        status.innerText = "Post uploaded!";
+        titleInput.value = "";
+        textInput.value = "";
+        linkInput.value = "";
+      }
     });
-});
+  });
+
+  // Load posts in real-time
+  postsRef.orderByChild('timestamp').on('value', snapshot => {
+    postsDiv.innerHTML = "";
+    const posts = snapshot.val();
+    if(!posts) return;
+
+    Object.keys(posts)
+      .sort((a,b) => posts[b].timestamp - posts[a].timestamp)
+      .forEach(k => {
+        const p = posts[k];
+        const card = document.createElement('div');
+        card.classList.add('card');
+
+        let html = `<h4>${p.title}</h4>`;
+        html += `<p>${p.text}</p>`;
+        if(p.link) html += `<p><a href="${p.link}" target="_blank">Media / Link</a></p>`;
+
+        card.innerHTML = html;
+        postsDiv.appendChild(card);
+      });
+  });
 </script>
 
 </body>
-  </html>
+      </html>
