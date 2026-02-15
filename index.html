@@ -6,17 +6,16 @@
 <title>Zee Web - Henicks GPT Field Tech</title>
 <style>
   body { font-family: Arial; margin:0; padding:0; background:#111; color:#00FF00; }
-  .hidden { display:none; }
   header { background:#000; padding:15px; text-align:center; color:#00FF00; }
   h1 { margin:0; }
-  button { background:#00FF00; color:#111; border:none; padding:10px 15px; border-radius:5px; cursor:pointer; margin-top:5px; }
-  button:hover { opacity:0.9; }
-  input, textarea { width:100%; margin:5px 0; padding:8px; border-radius:5px; border:none; }
+  a { color:#00FF00; text-decoration:none; }
   .container { padding:20px; }
   .card { background:#222; padding:15px; margin-bottom:15px; border-radius:8px; color:#fff; }
-  .post-input { margin-bottom:20px; }
   .pre-info { background:#1a1a1a; padding:15px; border-radius:8px; margin-bottom:20px; }
-  a { color:#00FF00; text-decoration:none; }
+  input, textarea { width:100%; margin:5px 0; padding:8px; border-radius:5px; border:none; }
+  button { background:#00FF00; color:#111; border:none; padding:10px 15px; border-radius:5px; cursor:pointer; margin-top:5px; }
+  button:hover { opacity:0.9; }
+  .post-input { margin-bottom:20px; }
 </style>
 </head>
 <body>
@@ -26,34 +25,10 @@
   <p>Henicks GPT Field Tech</p>
 </header>
 
-<!-- LOGIN / SIGN UP SCREEN -->
-<div id="authScreen" class="container">
-  <h2>Welcome to Zee Web</h2>
-  <p>Please Login or Sign Up to continue</p>
-
-  <div class="card">
-    <h3>Sign Up</h3>
-    <input type="email" id="signupEmail" placeholder="Email">
-    <input type="password" id="signupPass" placeholder="Password">
-    <button onclick="signUp()">Sign Up</button>
-  </div>
-
-  <div class="card">
-    <h3>Log In</h3>
-    <input type="email" id="loginEmail" placeholder="Email">
-    <input type="password" id="loginPass" placeholder="Password">
-    <button onclick="logIn()">Log In</button>
-  </div>
-</div>
-
-<!-- MAIN WEBSITE SCREEN -->
-<div id="mainScreen" class="container hidden">
-  <button onclick="logOut()" style="float:right;">Log Out</button>
-  <h2>Welcome to Zee Web Chat</h2>
-
+<div class="container">
   <!-- Pre-inserted info -->
   <div class="pre-info">
-    <h3>About Zee Man</h3>
+    <h2>About Zee Man</h2>
     <p>Name: Henry Tallen (Zee)</p>
     <p>Grade: 12, Nseko Day Secondary School</p>
     <p>Location: Near Success Shop</p>
@@ -78,7 +53,6 @@
 
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
 
 <script>
@@ -95,64 +69,24 @@
 
   // Initialize Firebase
   const app = firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
   const db = firebase.database();
 
-  const authScreen = document.getElementById('authScreen');
-  const mainScreen = document.getElementById('mainScreen');
   const postsDiv = document.getElementById('posts');
 
-  // Check auth state
-  auth.onAuthStateChanged(user => {
-    if(user){
-      authScreen.classList.add('hidden');
-      mainScreen.classList.remove('hidden');
-      loadPosts();
-    } else {
-      authScreen.classList.remove('hidden');
-      mainScreen.classList.add('hidden');
-    }
-  });
-
-  // Sign Up
-  function signUp(){
-    const email = document.getElementById('signupEmail').value;
-    const pass = document.getElementById('signupPass').value;
-    if(!email || !pass) return alert("Fill both fields!");
-    auth.createUserWithEmailAndPassword(email, pass)
-      .then(() => alert("Sign Up successful!"))
-      .catch(err => alert(err.message));
-  }
-
-  // Log In
-  function logIn(){
-    const email = document.getElementById('loginEmail').value;
-    const pass = document.getElementById('loginPass').value;
-    if(!email || !pass) return alert("Fill both fields!");
-    auth.signInWithEmailAndPassword(email, pass)
-      .then(() => console.log("Login successful"))
-      .catch(err => alert(err.message));
-  }
-
-  // Log Out
-  function logOut(){
-    auth.signOut();
-  }
-
-  // Upload Post
+  // Upload post
   function uploadPost(){
     const title = document.getElementById('postTitle').value || "No title";
     const text = document.getElementById('postText').value;
     const link = document.getElementById('postLink').value || "";
     if(!text) return alert("Write something!");
+
     const postData = {
-      uid: auth.currentUser.uid,
-      email: auth.currentUser.email,
       title,
       text,
       link,
       timestamp: Date.now()
     };
+
     const newRef = db.ref('posts').push();
     newRef.set(postData, err => {
       if(err){
@@ -177,7 +111,7 @@
         const p = posts[k];
         const card = document.createElement('div');
         card.classList.add('card');
-        let html = `<p><strong>${p.title}</strong> by ${p.email}</p>`;
+        let html = `<p><strong>${p.title}</strong></p>`;
         html += `<p>${p.text}</p>`;
         if(p.link) html += `<p><a href="${p.link}" target="_blank">Link / Media</a></p>`;
         card.innerHTML = html;
@@ -185,6 +119,8 @@
       });
     });
   }
+
+  loadPosts();
 </script>
 
 </body>
