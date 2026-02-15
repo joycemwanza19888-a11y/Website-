@@ -1,131 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zee Web - Henicks GPT Field Tech</title>
-<style>
-  body { font-family: Arial; margin:0; padding:0; background:#111; color:#00FF00; }
-  header { background:#000; padding:15px; text-align:center; color:#00FF00; }
-  h1 { margin:0; font-size:24px; }
-  .container { padding:15px; }
-  .card { background:#222; padding:15px; margin-bottom:15px; border-radius:8px; color:#fff; word-break:break-word; }
-  .pre-info { background:#1a1a1a; padding:15px; border-radius:8px; margin-bottom:20px; }
-  input, textarea { width:100%; margin:5px 0; padding:10px; border-radius:5px; border:none; }
-  button { background:#00FF00; color:#111; border:none; padding:10px 15px; border-radius:5px; cursor:pointer; margin-top:5px; }
-  button:hover { opacity:0.9; }
-  .post-input { margin-bottom:20px; }
-  .posts-title { margin-top:20px; margin-bottom:10px; font-size:20px; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zee Web Chat - Henicks GPT Field Tech</title>
+  <meta name="description" content="Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech. Share your talent and posts.">
+  <style>
+    body { font-family: Arial; margin:0; padding:0; background:#111; color:#FFD700; }
+    header { background:#000; padding:15px; text-align:center; }
+    section { padding:20px; }
+    .card { background:#222; padding:15px; margin-bottom:15px; border-radius:8px; }
+    input, textarea { width:100%; margin:5px 0; padding:8px; border-radius:5px; border:none; }
+    button { background:#FFD700; color:#111; border:none; padding:10px; border-radius:5px; cursor:pointer; }
+    button:hover { opacity:0.9; }
+    #posts .card { background:#1a1a1a; }
+    #chatInput { display:flex; gap:5px; }
+    #chatInput input { flex:1; }
+  </style>
 </head>
 <body>
 
 <header>
-  <h1>Zee Web</h1>
-  <p>Henicks GPT Field Tech</p>
+  <h1>Zee Web Chat</h1>
+  <p>Website created by Henry Tallen, Zee, owner of Henicks GPT Field Tech</p>
 </header>
 
-<div class="container">
-
-  <!-- Pre-inserted info -->
-  <div class="pre-info">
-    <h2>About Zee Man</h2>
-    <p>Name: Henry Tallen (Zee)</p>
-    <p>Grade: 12, Nseko Day Secondary School</p>
-    <p>Location: Near Success Shop</p>
-    <p>TikTok: <a href="https://www.tiktok.com/@zee_world_comedy" target="_blank">@zee_world_comedy</a> (1.6K followers)</p>
-    <p>I make apps, sometimes music, love creating new things and ideas.</p>
-  </div>
-
-  <!-- Input form -->
-  <div class="card post-input">
-    <h3>Share Your Work / Info</h3>
-    <input type="text" id="titleInput" placeholder="Title / Subject">
-    <textarea id="textInput" placeholder="Write about yourself, your work, etc."></textarea>
-    <input type="text" id="linkInput" placeholder="Optional: Image or Audio URL">
-    <button id="uploadBtn">Upload</button>
+<section>
+  <div class="card">
+    <h2>Send Message</h2>
+    <div id="chatInput">
+      <input type="text" id="nameInput" placeholder="Your Name">
+      <input type="text" id="textInput" placeholder="Type a message">
+      <button onclick="sendMessage()">Send</button>
+    </div>
     <p id="status"></p>
   </div>
+</section>
 
-  <div class="posts-title">All Posts</div>
+<section>
+  <h2>Chat</h2>
   <div id="posts"></div>
+</section>
 
-</div>
-
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
+<!-- Firebase v8 SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-  // Firebase configuration
-  const firebaseConfig = {
+  // Firebase configuration (your database URL included)
+  var firebaseConfig = {
     apiKey: "AIzaSyCO_Pmu6QYJWbnNvRUYyRLvi6SLIfUrtHI",
     authDomain: "zeeworldyhi.firebaseapp.com",
     databaseURL: "https://zeeworldyhi-default-rtdb.firebaseio.com/",
     projectId: "zeeworldyhi",
-    storageBucket: "zeeworldyhi.appspot.com",
+    storageBucket: "zeeworldyhi.firebasestorage.app",
     messagingSenderId: "154414924399",
     appId: "1:154414924399:web:4817b6b3e7cb5f91ba439a"
   };
 
   // Initialize Firebase
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const postsRef = db.ref('posts'); // exact path
+  firebase.initializeApp(firebaseConfig);
+  var database = firebase.database();
 
   // DOM elements
-  const postsDiv = document.getElementById('posts');
-  const uploadBtn = document.getElementById('uploadBtn');
-  const titleInput = document.getElementById('titleInput');
-  const textInput = document.getElementById('textInput');
-  const linkInput = document.getElementById('linkInput');
-  const status = document.getElementById('status');
+  var nameInput = document.getElementById('nameInput');
+  var textInput = document.getElementById('textInput');
+  var statusP = document.getElementById('status');
+  var postsDiv = document.getElementById('posts');
 
-  // Upload post
-  uploadBtn.addEventListener('click', () => {
-    const title = titleInput.value || "No title";
-    const text = textInput.value;
-    const link = linkInput.value || "";
+  // Send message function
+  function sendMessage() {
+    var name = nameInput.value || "Anonymous";
+    var text = textInput.value;
+    if (!text) return alert("Write something before sending!");
 
-    if(!text) return alert("Write something before uploading!");
-
-    const postData = { title, text, link, timestamp: Date.now() };
-
-    postsRef.push(postData, (err) => {
-      if(err){
-        status.innerText = "Error uploading post!";
-        console.error(err);
+    var messageData = { name: name, text: text, timestamp: Date.now() };
+    var newMessageRef = database.ref('messages').push();
+    newMessageRef.set(messageData, function(error) {
+      if (error) {
+        statusP.innerText = "Error: " + error;
       } else {
-        status.innerText = "Post uploaded!";
-        titleInput.value = "";
+        statusP.innerText = "Message sent!";
         textInput.value = "";
-        linkInput.value = "";
       }
     });
-  });
+  }
 
-  // Load posts in real-time
-  postsRef.orderByChild('timestamp').on('value', snapshot => {
+  // Real-time listener for messages
+  var messagesRef = database.ref('messages');
+  messagesRef.on('value', function(snapshot) {
     postsDiv.innerHTML = "";
-    const posts = snapshot.val();
-    if(!posts) return;
+    var messages = snapshot.val();
+    if (!messages) return;
 
-    Object.keys(posts)
-      .sort((a,b) => posts[b].timestamp - posts[a].timestamp)
-      .forEach(k => {
-        const p = posts[k];
-        const card = document.createElement('div');
-        card.classList.add('card');
+    var sortedKeys = Object.keys(messages).sort(function(a,b) {
+      return messages[a].timestamp - messages[b].timestamp;
+    });
 
-        let html = `<h4>${p.title}</h4>`;
-        html += `<p>${p.text}</p>`;
-        if(p.link) html += `<p><a href="${p.link}" target="_blank">Media / Link</a></p>`;
-
-        card.innerHTML = html;
-        postsDiv.appendChild(card);
-      });
+    sortedKeys.forEach(function(key) {
+      var msg = messages[key];
+      var card = document.createElement('div');
+      card.classList.add('card');
+      card.innerHTML = "<p><strong>" + msg.name + "</strong></p><p>" + msg.text + "</p>";
+      postsDiv.appendChild(card);
+      postsDiv.scrollTop = postsDiv.scrollHeight; // auto-scroll
+    });
   });
 </script>
 
 </body>
-      </html>
+  </html>
