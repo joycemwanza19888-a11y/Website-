@@ -217,11 +217,22 @@
         alert("Error sending message: " + error.message);
       } else {
         document.getElementById('textInput').value = "";
+        // Display the message immediately after sending
+        displayMessage(messageData);
       }
     });
   }
 
-  // Display messages in the chat
+  // Display message in the chat window
+  function displayMessage(msg) {
+    var chatDisplay = document.getElementById('chatDisplay');
+    var messageElement = document.createElement('div');
+    messageElement.classList.add(msg.user === firebase.auth().currentUser.email ? 'chat-box user1' : 'chat-box user2');
+    messageElement.innerHTML = "<strong>" + msg.user + ":</strong> " + msg.text;
+    chatDisplay.appendChild(messageElement);
+  }
+
+  // Display messages in the chat when fetched from Firebase
   database.ref('chats').on('value', function(snapshot) {
     var messages = snapshot.val();
     var chatDisplay = document.getElementById('chatDisplay');
@@ -230,10 +241,7 @@
       if (messages[chatRoomId].messages) {
         for (var key in messages[chatRoomId].messages) {
           var msg = messages[chatRoomId].messages[key];
-          var messageElement = document.createElement('div');
-          messageElement.classList.add(msg.user === firebase.auth().currentUser.email ? 'chat-box user1' : 'chat-box user2');
-          messageElement.innerHTML = "<strong>" + msg.user + ":</strong> " + msg.text;
-          chatDisplay.appendChild(messageElement);
+          displayMessage(msg);
         }
       }
     }
@@ -246,4 +254,4 @@
 </script>
 
 </body>
-  </html>
+    </html>
