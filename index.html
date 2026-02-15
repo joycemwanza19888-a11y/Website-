@@ -203,8 +203,15 @@
   function sendMessage() {
     var user = firebase.auth().currentUser;
     var text = document.getElementById('textInput').value;
+
+    if (!text) return alert("Write something before sending!");
+
+    // Here we need to create a chat room with the friend
+    var friendId = "friendUserId";  // Replace this with actual friend's user ID
+    var chatRoomId = [user.uid, friendId].sort().join('-'); // Create a unique chat room ID
+
     var messageData = { user: user.email, text: text, timestamp: Date.now() };
-    var newMessageRef = database.ref('chats/messages').push();
+    var newMessageRef = database.ref('chats/' + chatRoomId + '/messages').push();
     newMessageRef.set(messageData, function(error) {
       if (error) {
         alert("Error sending message: " + error.message);
@@ -215,16 +222,20 @@
   }
 
   // Display messages in the chat
-  database.ref('chats/messages').on('value', function(snapshot) {
+  database.ref('chats').on('value', function(snapshot) {
     var messages = snapshot.val();
     var chatDisplay = document.getElementById('chatDisplay');
     chatDisplay.innerHTML = ""; // Clear previous messages
-    for (var key in messages) {
-      var msg = messages[key];
-      var messageElement = document.createElement('div');
-      messageElement.classList.add(msg.user === firebase.auth().currentUser.email ? 'chat-box user1' : 'chat-box user2');
-      messageElement.innerHTML = "<strong>" + msg.user + ":</strong> " + msg.text;
-      chatDisplay.appendChild(messageElement);
+    for (var chatRoomId in messages) {
+      if (messages[chatRoomId].messages) {
+        for (var key in messages[chatRoomId].messages) {
+          var msg = messages[chatRoomId].messages[key];
+          var messageElement = document.createElement('div');
+          messageElement.classList.add(msg.user === firebase.auth().currentUser.email ? 'chat-box user1' : 'chat-box user2');
+          messageElement.innerHTML = "<strong>" + msg.user + ":</strong> " + msg.text;
+          chatDisplay.appendChild(messageElement);
+        }
+      }
     }
   });
 
@@ -232,7 +243,6 @@
   function sendImage() {
     alert("Image sending functionality is coming soon!");
   }
-
 </script>
 
 </body>
